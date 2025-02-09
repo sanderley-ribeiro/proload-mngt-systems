@@ -2,7 +2,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductForm from "@/components/products/ProductForm";
-import ProductReport from "@/components/products/ProductReport";
 
 const Products = () => {
   return (
@@ -12,7 +11,6 @@ const Products = () => {
       <Tabs defaultValue="register" className="space-y-4">
         <TabsList>
           <TabsTrigger value="register">Cadastro de Produtos</TabsTrigger>
-          <TabsTrigger value="report">Relatório</TabsTrigger>
         </TabsList>
 
         <TabsContent value="register">
@@ -22,17 +20,6 @@ const Products = () => {
             </CardHeader>
             <CardContent>
               <ProductForm />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="report">
-          <Card>
-            <CardHeader>
-              <CardTitle>Relatório de Movimentação</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ProductReport />
             </CardContent>
           </Card>
         </TabsContent>
