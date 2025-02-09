@@ -26,13 +26,20 @@ const Login = () => {
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        toast({
+          title: "Erro ao fazer login",
+          description: "E-mail ou senha incorretos. Por favor, verifique suas credenciais.",
+          variant: "destructive",
+        });
+        return;
+      }
       
       navigate("/");
     } catch (error: any) {
       toast({
         title: "Erro ao fazer login",
-        description: error.message,
+        description: "E-mail ou senha incorretos. Por favor, verifique suas credenciais.",
         variant: "destructive",
       });
     } finally {
@@ -54,7 +61,14 @@ const Login = () => {
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        toast({
+          title: "Erro ao fazer cadastro",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
       
       toast({
         title: "Cadastro realizado",
@@ -72,72 +86,80 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-lg">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl md:text-3xl">Sistema de Gerenciamento</CardTitle>
-          <CardDescription className="text-sm md:text-base">Entre com sua conta ou cadastre-se</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSignIn} className="space-y-4">
-            <div className="space-y-2">
-              <Input
-                type="email"
-                name="email"
-                placeholder="E-mail"
-                required
-                disabled={isLoading}
-              />
-              <Input
-                type="password"
-                name="password"
-                placeholder="Senha"
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Entrando..." : "Entrar"}
-            </Button>
-          </form>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-full max-w-lg px-4 py-8">
+        <Card className="w-full">
+          <CardHeader className="space-y-2 text-center">
+            <CardTitle className="text-3xl font-bold">Sistema de Gerenciamento</CardTitle>
+            <CardDescription className="text-base">
+              Entre com sua conta ou cadastre-se
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <div className="space-y-2">
+                <Input
+                  type="email"
+                  name="email"
+                  placeholder="E-mail"
+                  required
+                  disabled={isLoading}
+                  className="w-full"
+                />
+                <Input
+                  type="password"
+                  name="password"
+                  placeholder="Senha"
+                  required
+                  disabled={isLoading}
+                  className="w-full"
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Entrando..." : "Entrar"}
+              </Button>
+            </form>
 
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Ou
+                </span>
+              </div>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Ou
-              </span>
-            </div>
-          </div>
 
-          <form onSubmit={handleSignUp} className="space-y-4">
-            <div className="space-y-2">
-              <Input
-                type="email"
-                name="email"
-                placeholder="E-mail"
-                required
-                disabled={isLoading}
-              />
-              <Input
-                type="password"
-                name="password"
-                placeholder="Senha"
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Cadastrando..." : "Cadastrar"}
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="justify-center text-sm text-muted-foreground">
-          Sistema de Gerenciamento &copy; {new Date().getFullYear()}
-        </CardFooter>
-      </Card>
+            <form onSubmit={handleSignUp} className="space-y-4">
+              <div className="space-y-2">
+                <Input
+                  type="email"
+                  name="email"
+                  placeholder="E-mail"
+                  required
+                  disabled={isLoading}
+                  className="w-full"
+                />
+                <Input
+                  type="password"
+                  name="password"
+                  placeholder="Senha"
+                  required
+                  disabled={isLoading}
+                  className="w-full"
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Cadastrando..." : "Cadastrar"}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="justify-center text-sm text-muted-foreground">
+            Sistema de Gerenciamento &copy; {new Date().getFullYear()}
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 };
