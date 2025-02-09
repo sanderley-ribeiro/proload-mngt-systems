@@ -11,6 +11,7 @@ import Production from "./pages/Production";
 import Loading from "./pages/Loading";
 import NotFound from "./pages/NotFound";
 import AppLayout from "./components/layout/AppLayout";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
       <SidebarProvider>
         <BrowserRouter>
           <Routes>
+            <Route path="/login" element={<Login />} />
             <Route path="/" element={<AppLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="products" element={<Products />} />
