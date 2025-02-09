@@ -16,6 +16,8 @@ export const DailyProductionChart = () => {
   const { data: productionData, isLoading: productionLoading } = useQuery({
     queryKey: ["daily-production"],
     queryFn: async () => {
+      console.log("Fetching production data...");
+      
       const { data, error } = await supabase
         .from("daily_production_view")
         .select(`
@@ -31,13 +33,29 @@ export const DailyProductionChart = () => {
       }
 
       console.log("Raw production data:", data);
+      
+      // Se não houver dados, retornar array vazio
+      if (!data || data.length === 0) {
+        console.log("No production data found");
+        return [];
+      }
 
-      const formattedData = data.map((item: any) => ({
-        date: format(new Date(item.production_date), 'dd/MM', { locale: ptBR }),
-        product: item.product.name,
-        total: Number(item.total_production)
-      }));
+      // Criar um mapa de datas únicas para agrupar produções do mesmo dia
+      const dailyProduction = data.reduce((acc: any, curr: any) => {
+        const date = format(new Date(curr.production_date), 'dd/MM', { locale: ptBR });
+        if (!acc[date]) {
+          acc[date] = {
+            date,
+            product: curr.product.name,
+            total: Number(curr.total_production)
+          };
+        } else {
+          acc[date].total += Number(curr.total_production);
+        }
+        return acc;
+      }, {});
 
+      const formattedData = Object.values(dailyProduction);
       console.log("Formatted production data:", formattedData);
       return formattedData;
     }
