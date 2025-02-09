@@ -5,48 +5,113 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // TODO: Implement Supabase authentication
-    toast({
-      title: "Em breve",
-      description: "Funcionalidade de login será implementada após conexão com Supabase",
-    });
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
     
-    setIsLoading(false);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Login realizado com sucesso!",
+        description: "Você será redirecionado para o dashboard.",
+      });
+      
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        title: "Erro ao fazer login",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // TODO: Implement Supabase registration
-    toast({
-      title: "Em breve",
-      description: "Funcionalidade de registro será implementada após conexão com Supabase",
-    });
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const name = formData.get("name") as string;
+    const role = formData.get("role") as string;
     
-    setIsLoading(false);
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            role,
+          },
+        },
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Registro realizado com sucesso!",
+        description: "Verifique seu e-mail para confirmar o cadastro.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao fazer registro",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePasswordReset = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // TODO: Implement Supabase password reset
-    toast({
-      title: "Em breve", 
-      description: "Funcionalidade de recuperação de senha será implementada após conexão com Supabase",
-    });
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
     
-    setIsLoading(false);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "E-mail enviado",
+        description: "Verifique sua caixa de entrada para redefinir sua senha.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao enviar e-mail",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -69,12 +134,14 @@ const Login = () => {
                 <div className="space-y-2">
                   <Input
                     type="email"
+                    name="email"
                     placeholder="E-mail"
                     required
                     disabled={isLoading}
                   />
                   <Input
                     type="password"
+                    name="password"
                     placeholder="Senha"
                     required
                     disabled={isLoading}
@@ -91,23 +158,27 @@ const Login = () => {
                 <div className="space-y-2">
                   <Input
                     type="text"
+                    name="name"
                     placeholder="Nome"
                     required
                     disabled={isLoading}
                   />
                   <Input
                     type="email"
+                    name="email"
                     placeholder="E-mail"
                     required
                     disabled={isLoading}
                   />
                   <Input
                     type="password"
+                    name="password"
                     placeholder="Senha"
                     required
                     disabled={isLoading}
                   />
                   <select 
+                    name="role"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     required
                     disabled={isLoading}
@@ -128,6 +199,7 @@ const Login = () => {
                 <div className="space-y-2">
                   <Input
                     type="email"
+                    name="email"
                     placeholder="E-mail"
                     required
                     disabled={isLoading}

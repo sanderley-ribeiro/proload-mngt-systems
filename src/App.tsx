@@ -12,6 +12,8 @@ import Loading from "./pages/Loading";
 import NotFound from "./pages/NotFound";
 import AppLayout from "./components/layout/AppLayout";
 import Login from "./pages/Login";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -20,20 +22,29 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <SidebarProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<AppLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="products" element={<Products />} />
-              <Route path="production" element={<Production />} />
-              <Route path="loading" element={<Loading />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </SidebarProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <SidebarProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Dashboard />} />
+                <Route path="products" element={<Products />} />
+                <Route path="production" element={<Production />} />
+                <Route path="loading" element={<Loading />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
+            </Routes>
+          </SidebarProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
