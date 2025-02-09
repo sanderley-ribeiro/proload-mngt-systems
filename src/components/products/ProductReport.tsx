@@ -14,6 +14,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface ProductInfo {
   name: string;
@@ -37,10 +38,16 @@ export default function ProductReport() {
   const [endDate, setEndDate] = useState(
     format(new Date().setHours(23, 59, 59, 999), "yyyy-MM-dd'T'HH:mm")
   );
+  const [filter, setFilter] = useState({
+    startDate,
+    endDate
+  });
 
-  const { data: movements, refetch } = useQuery<Movement[]>({
-    queryKey: ["movements", startDate, endDate],
+  const { data: movements, isLoading } = useQuery<Movement[]>({
+    queryKey: ["movements", filter.startDate, filter.endDate],
     queryFn: async () => {
+      console.log("Fetching movements with dates:", filter.startDate, filter.endDate);
+      
       const { data, error } = await supabase
         .from("product_movements")
         .select(`
@@ -54,11 +61,15 @@ export default function ProductReport() {
             unit
           )
         `)
-        .gte("date", startDate)
-        .lte("date", endDate)
+        .gte("date", filter.startDate)
+        .lte("date", filter.endDate)
         .order("date", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        toast.error("Erro ao carregar movimentações");
+        throw error;
+      }
+      
       return data as Movement[];
     },
   });
@@ -75,7 +86,6 @@ export default function ProductReport() {
           table: 'product_movements'
         },
         () => {
-          // Invalidate and refetch when new movement is added
           queryClient.invalidateQueries({ queryKey: ["movements"] });
         }
       )
@@ -85,6 +95,20 @@ export default function ProductReport() {
       supabase.removeChannel(channel);
     };
   }, [queryClient]);
+
+  const handleFilter = () => {
+    if (new Date(startDate) > new Date(endDate)) {
+      toast.error("A data inicial não pode ser maior que a data final");
+      return;
+    }
+    
+    setFilter({
+      startDate,
+      endDate
+    });
+    
+    toast.success("Filtro aplicado com sucesso");
+  };
 
   return (
     <div className="space-y-4">
@@ -111,7 +135,7 @@ export default function ProductReport() {
       </div>
 
       <Button 
-        onClick={() => refetch()}
+        onClick={handleFilter}
         className="w-full md:w-auto"
       >
         Filtrar Movimentações
@@ -144,6 +168,13 @@ export default function ProductReport() {
                 <TableCell>{movement.notes}</TableCell>
               </TableRow>
             ))}
+            {!movements?.length && (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-4">
+                  Nenhuma movimentação encontrada no período selecionado
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
