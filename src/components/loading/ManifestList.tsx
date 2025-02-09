@@ -21,6 +21,12 @@ interface ShippingManifest {
   client_name: string;
   number: string;
   status: string;
+  items: {
+    product: {
+      name: string;
+    };
+    quantity: number;
+  }[];
 }
 
 export default function ManifestList() {
@@ -30,7 +36,15 @@ export default function ManifestList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("shipping_manifests")
-        .select("*")
+        .select(`
+          *,
+          items:manifest_items(
+            quantity,
+            product:products(
+              name
+            )
+          )
+        `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -64,6 +78,12 @@ export default function ManifestList() {
     }
   };
 
+  const formatProductList = (items: ShippingManifest["items"]) => {
+    return items
+      .map((item) => `${item.product.name} (${item.quantity})`)
+      .join(", ");
+  };
+
   return (
     <div>
       <Table>
@@ -73,6 +93,7 @@ export default function ManifestList() {
             <TableHead>Data/Hora</TableHead>
             <TableHead>Motorista</TableHead>
             <TableHead>Cliente</TableHead>
+            <TableHead>Produtos</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="w-[100px]"></TableHead>
           </TableRow>
@@ -86,6 +107,7 @@ export default function ManifestList() {
               </TableCell>
               <TableCell>{manifest.driver_name}</TableCell>
               <TableCell>{manifest.client_name}</TableCell>
+              <TableCell>{formatProductList(manifest.items)}</TableCell>
               <TableCell>
                 <Badge variant={getStatusColor(manifest.status)}>
                   {getStatusText(manifest.status)}
