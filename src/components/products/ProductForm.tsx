@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,7 +51,6 @@ export default function ProductForm() {
     const productName = formData.get("name") as string;
 
     try {
-      // Check if a product with the same name already exists
       const { data: existingProducts, error: searchError } = await supabase
         .from("products")
         .select("name")
@@ -81,7 +80,6 @@ export default function ProductForm() {
         title: "Produto cadastrado com sucesso!",
       });
       
-      // Invalidate products query to refresh the list
       queryClient.invalidateQueries({ queryKey: ["products"] });
       
       e.currentTarget.reset();
@@ -98,7 +96,6 @@ export default function ProductForm() {
 
   const handleDelete = async (productId: string) => {
     try {
-      // First check if the product is being used in any shipping manifest
       const { data: manifestItems, error: checkError } = await supabase
         .from("shipping_manifest_items")
         .select("id")
@@ -127,7 +124,6 @@ export default function ProductForm() {
         title: "Produto excluído com sucesso!",
       });
 
-      // Refresh the products list
       queryClient.invalidateQueries({ queryKey: ["products"] });
     } catch (error: any) {
       toast({
@@ -150,22 +146,24 @@ export default function ProductForm() {
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid gap-2">
-          <Label htmlFor="name">Nome do Produto</Label>
-          <Input id="name" name="name" required />
-        </div>
-        
-        <div className="grid gap-2">
-          <Label htmlFor="barcode">Código de Barras</Label>
-          <Input id="barcode" name="barcode" required />
-        </div>
-        
-        <div className="grid gap-2">
-          <Label htmlFor="unit">Unidade de Medida</Label>
-          <Input id="unit" name="unit" placeholder="ex: kg, litros, unidades" required />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Nome do Produto</Label>
+            <Input id="name" name="name" required />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="barcode">Código de Barras</Label>
+            <Input id="barcode" name="barcode" required />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="unit">Unidade de Medida</Label>
+            <Input id="unit" name="unit" placeholder="ex: kg, litros, unidades" required />
+          </div>
         </div>
 
-        <Button type="submit" disabled={isLoading}>
+        <Button type="submit" disabled={isLoading} className="w-full">
           {isLoading ? "Cadastrando..." : "Cadastrar Produto"}
         </Button>
       </form>
@@ -193,7 +191,6 @@ export default function ProductForm() {
                 <TableCell className="text-right space-x-2">
                   <Button
                     onClick={() => {
-                      // TODO: Implement edit functionality
                       toast({
                         title: "Em breve",
                         description: "Funcionalidade de edição será implementada em breve",
