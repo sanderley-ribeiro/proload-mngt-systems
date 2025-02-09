@@ -1,20 +1,12 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { Trash2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import ManifestFormHeader from "./ManifestFormHeader";
+import ManifestItem from "./ManifestItem";
+import { Label } from "@/components/ui/label";
 
 interface Product {
   id: string;
@@ -31,7 +23,6 @@ export default function ManifestForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [items, setItems] = useState<ManifestItem[]>([]);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   const { data: products } = useQuery({
     queryKey: ["products"],
@@ -60,8 +51,8 @@ export default function ManifestForm() {
       const { data: manifest, error: manifestError } = await supabase
         .from("shipping_manifests")
         .insert([{
-          driver_name: formData.get("driver_name"),
-          client_name: formData.get("client_name"),
+          driver_name: formData.get("driver_name") as string,
+          client_name: formData.get("client_name") as string,
           created_by: profile.user.id,
         }])
         .select()
@@ -118,24 +109,9 @@ export default function ManifestForm() {
     setItems(newItems);
   };
 
-  const getProductName = (productId: string) => {
-    const product = products?.find(p => p.id === productId);
-    return product ? `${product.name} (${product.unit})` : "";
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="grid gap-2">
-          <Label htmlFor="driver_name">Nome do Motorista</Label>
-          <Input id="driver_name" name="driver_name" required />
-        </div>
-        
-        <div className="grid gap-2">
-          <Label htmlFor="client_name">Nome do Cliente</Label>
-          <Input id="client_name" name="client_name" required />
-        </div>
-      </div>
+      <ManifestFormHeader disabled={isLoading} />
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -146,54 +122,14 @@ export default function ManifestForm() {
         </div>
 
         {items.map((item, index) => (
-          <Card key={index}>
-            <CardContent className="pt-6">
-              <div className="grid gap-4 md:grid-cols-[1fr,120px,40px]">
-                <div className="grid gap-2">
-                  <Label>Produto</Label>
-                  <Select
-                    value={item.productId}
-                    onValueChange={(value) => updateItem(index, "productId", value)}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um produto" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {products?.map((product) => (
-                        <SelectItem key={product.id} value={product.id}>
-                          {product.name} ({product.unit})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label>Quantidade</Label>
-                  <Input
-                    type="number"
-                    value={item.quantity}
-                    onChange={(e) => updateItem(index, "quantity", parseFloat(e.target.value))}
-                    required
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-
-                <div className="flex items-end">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeItem(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <ManifestItem
+            key={index}
+            index={index}
+            item={item}
+            products={products}
+            onUpdate={updateItem}
+            onRemove={removeItem}
+          />
         ))}
       </div>
 
