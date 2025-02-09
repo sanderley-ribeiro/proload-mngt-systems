@@ -1,5 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ManifestForm from "@/components/loading/ManifestForm";
 
 const Loading = () => {
   return (
@@ -8,12 +9,10 @@ const Loading = () => {
       
       <Card>
         <CardHeader>
-          <CardTitle>Gerenciamento de Carregamento</CardTitle>
+          <CardTitle>Criar Romaneio</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[400px] flex items-center justify-center text-muted-foreground">
-            Interface de Gerenciamento de Carregamento Em Breve
-          </div>
+          <ManifestForm />
         </CardContent>
       </Card>
     </div>

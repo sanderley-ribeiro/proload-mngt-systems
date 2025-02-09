@@ -108,6 +108,77 @@ export type Database = {
         }
         Relationships: []
       }
+      shipping_manifest_items: {
+        Row: {
+          created_at: string
+          id: string
+          manifest_id: string
+          product_id: string
+          quantity: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          manifest_id: string
+          product_id: string
+          quantity: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          manifest_id?: string
+          product_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_manifest_items_manifest_id_fkey"
+            columns: ["manifest_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_manifests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipping_manifest_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shipping_manifests: {
+        Row: {
+          client_name: string
+          created_at: string
+          created_by: string
+          driver_name: string
+          id: string
+        }
+        Insert: {
+          client_name: string
+          created_at?: string
+          created_by: string
+          driver_name: string
+          id?: string
+        }
+        Update: {
+          client_name?: string
+          created_at?: string
+          created_by?: string
+          driver_name?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_manifests_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
