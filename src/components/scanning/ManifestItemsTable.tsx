@@ -37,10 +37,17 @@ export function ManifestItemsTable({
   onComplete,
   onScanItem 
 }: ManifestItemsTableProps) {
+  const isCompleted = status === 'completed';
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle>Produtos do Romaneio</CardTitle>
+        {isCompleted && (
+          <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+            Finalizado
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <Table>
@@ -88,7 +95,7 @@ export function ManifestItemsTable({
                         }
                         onScanItem(item.id);
                       }}
-                      disabled={isItemComplete || status === 'completed'}
+                      disabled={isItemComplete || isCompleted}
                     >
                       Adicionar
                     </Button>
@@ -101,8 +108,9 @@ export function ManifestItemsTable({
 
         <div className="mt-6">
           <Button 
-            disabled={!isComplete || status === 'completed'} 
+            disabled={!isComplete || isCompleted}
             onClick={onComplete}
+            className={isCompleted ? "hidden" : ""}
           >
             Finalizar Romaneio
           </Button>
