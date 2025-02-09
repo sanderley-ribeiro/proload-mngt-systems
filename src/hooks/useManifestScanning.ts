@@ -158,11 +158,11 @@ export function useManifestScanning(manifestId: string) {
     }
 
     const newScans = [...currentScans, new Date().toISOString()];
-    
+
     // Optimistically update the UI before making the API call
     queryClient.setQueryData(["manifest", manifestId], (oldData: ManifestData | undefined) => {
       if (!oldData) return oldData;
-      
+
       return {
         ...oldData,
         items: oldData.items.map(i => 
