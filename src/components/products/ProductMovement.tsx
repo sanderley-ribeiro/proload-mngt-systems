@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +25,7 @@ export default function ProductMovement() {
   const [isLoading, setIsLoading] = useState(false);
   const [movementType, setMovementType] = useState<"input" | "output">("input");
   const { toast } = useToast();
+  const formRef = useRef<HTMLFormElement>(null);
 
   const { data: products } = useQuery({
     queryKey: ["products"],
@@ -66,7 +67,8 @@ export default function ProductMovement() {
         title: "Movimento registrado com sucesso!",
       });
       
-      e.currentTarget.reset();
+      formRef.current?.reset();
+      setMovementType("input"); // Reset movement type to default
     } catch (error: any) {
       toast({
         title: "Erro ao registrar movimento",
@@ -79,7 +81,7 @@ export default function ProductMovement() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-2">
         <Label htmlFor="product_id">Produto</Label>
         <Select name="product_id" required>
