@@ -44,10 +44,10 @@ export function AppSidebar() {
   const location = useLocation();
 
   return (
-    <Sidebar>
-      <SidebarContent>
+    <Sidebar className="bg-background border-r shadow-lg">
+      <SidebarContent className="bg-background">
         <SidebarGroup>
-          <SidebarGroupLabel>Sistema de Gerenciamento</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-foreground">Sistema de Gerenciamento</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -55,8 +55,12 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     asChild
                     isActive={location.pathname === item.path}
+                    className="hover:bg-accent focus:bg-accent"
                   >
-                    <Link to={item.path} className="flex items-center gap-2">
+                    <Link 
+                      to={item.path} 
+                      className="flex items-center gap-2 p-2 rounded-md transition-colors duration-200"
+                    >
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
                     </Link>

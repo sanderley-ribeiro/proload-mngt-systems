@@ -8,7 +8,7 @@ const AppLayout = () => {
     <div className="min-h-screen flex w-full bg-background">
       <AppSidebar />
       <main className="flex-1 overflow-hidden px-4 py-6">
-        <SidebarTrigger className="mb-4" />
+        <SidebarTrigger className="mb-4 hover:bg-accent p-2 rounded-md transition-colors duration-200" />
         <div className="container mx-auto animate-fade-in">
           <Outlet />
         </div>
