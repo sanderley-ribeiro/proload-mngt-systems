@@ -122,6 +122,15 @@ export function useManifestScanning(manifestId: string) {
       return;
     }
 
+    handleScanItem(item.id);
+  };
+
+  const handleScanItem = (itemId: string) => {
+    if (!manifest) return;
+
+    const item = manifest.items.find((item) => item.id === itemId);
+    if (!item) return;
+
     const currentScans = item.scanned_at || [];
     if (currentScans.length >= item.quantity) {
       toast.error("Quantidade excede o total do romaneio");
@@ -134,7 +143,7 @@ export function useManifestScanning(manifestId: string) {
       scannedAt: newScans,
     });
 
-    toast.success(`${item.product.name} escaneado com sucesso`);
+    toast.success(`${item.product.name} adicionado com sucesso`);
   };
 
   const handleComplete = () => {
@@ -147,5 +156,6 @@ export function useManifestScanning(manifestId: string) {
     isLoading,
     isComplete,
     handleComplete,
+    handleScanItem,
   };
 }

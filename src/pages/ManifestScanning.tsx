@@ -6,7 +6,13 @@ import { useManifestScanning } from "@/hooks/useManifestScanning";
 
 export default function ManifestScanning() {
   const { id } = useParams();
-  const { manifest, isLoading, isComplete, handleComplete } = useManifestScanning(id!);
+  const { 
+    manifest, 
+    isLoading, 
+    isComplete, 
+    handleComplete,
+    handleScanItem
+  } = useManifestScanning(id!);
 
   if (isLoading) {
     return <div>Carregando...</div>;
@@ -28,6 +34,7 @@ export default function ManifestScanning() {
         isComplete={isComplete}
         status={manifest.status}
         onComplete={handleComplete}
+        onScanItem={handleScanItem}
       />
     </div>
   );

@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 
 interface ManifestItem {
   id: string;
@@ -26,18 +27,20 @@ interface ManifestItemsTableProps {
   isComplete: boolean;
   status: string;
   onComplete: () => void;
+  onScanItem: (itemId: string) => void;
 }
 
 export function ManifestItemsTable({ 
   items, 
   isComplete, 
   status, 
-  onComplete 
+  onComplete,
+  onScanItem 
 }: ManifestItemsTableProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Produtos</CardTitle>
+        <CardTitle>Produtos do Romaneio</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
@@ -48,6 +51,7 @@ export function ManifestItemsTable({
               <TableHead className="text-right">Escaneado</TableHead>
               <TableHead className="text-right">Total</TableHead>
               <TableHead>Último Escaneamento</TableHead>
+              <TableHead>Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -73,6 +77,22 @@ export function ManifestItemsTable({
                   </TableCell>
                   <TableCell className="text-right">{item.quantity}</TableCell>
                   <TableCell>{lastScan}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (isItemComplete) {
+                          toast.error("Quantidade máxima atingida");
+                          return;
+                        }
+                        onScanItem(item.id);
+                      }}
+                      disabled={isItemComplete}
+                    >
+                      Adicionar
+                    </Button>
+                  </TableCell>
                 </TableRow>
               );
             })}
