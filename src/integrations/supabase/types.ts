@@ -160,6 +160,7 @@ export type Database = {
           manifest_id: string
           product_id: string
           quantity: number
+          scanned_at: string[] | null
         }
         Insert: {
           created_at?: string
@@ -167,6 +168,7 @@ export type Database = {
           manifest_id: string
           product_id: string
           quantity: number
+          scanned_at?: string[] | null
         }
         Update: {
           created_at?: string
@@ -174,6 +176,7 @@ export type Database = {
           manifest_id?: string
           product_id?: string
           quantity?: number
+          scanned_at?: string[] | null
         }
         Relationships: [
           {

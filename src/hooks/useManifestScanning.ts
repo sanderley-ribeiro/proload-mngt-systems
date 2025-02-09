@@ -9,7 +9,7 @@ interface ManifestItem {
   id: string;
   product_id: string;
   quantity: number;
-  scanned_at: string[];
+  scanned_at: string[] | null;
   product: {
     name: string;
     unit: string;
