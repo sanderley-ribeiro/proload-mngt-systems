@@ -75,16 +75,23 @@ export function useManifestScanning(manifestId: string) {
 
   const updateItemMutation = useMutation({
     mutationFn: async ({ itemId, scannedAt }: { itemId: string; scannedAt: string[] }) => {
-      const { error } = await supabase
+      console.log("Updating item with new scanned_at:", scannedAt); // Debug log
+      const { data, error } = await supabase
         .from("shipping_manifest_items")
         .update({ scanned_at: scannedAt })
-        .eq("id", itemId);
+        .eq("id", itemId)
+        .select();
 
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["manifest", manifestId] });
     },
+    onError: (error) => {
+      console.error("Error updating item:", error); // Debug log
+      toast.error("Erro ao atualizar item");
+    }
   });
 
   const completeManifestMutation = useMutation({
@@ -152,6 +159,8 @@ export function useManifestScanning(manifestId: string) {
     }
 
     const newScans = [...currentScans, new Date().toISOString()];
+    console.log("Current scans:", currentScans.length, "New scans:", newScans.length); // Debug log
+    
     updateItemMutation.mutate({
       itemId: item.id,
       scannedAt: newScans,
