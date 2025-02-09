@@ -259,7 +259,22 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      daily_production_view: {
+        Row: {
+          product_id: string | null
+          production_date: string | null
+          total_production: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       has_role: {
