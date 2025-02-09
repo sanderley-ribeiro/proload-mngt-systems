@@ -175,7 +175,7 @@ export function useManifestScanning(manifestId: string) {
 
     // Make the API call to update the database
     updateItemMutation.mutate({
-      itemId: item.id,
+      itemId,
       scannedAt: newScans,
     });
 
