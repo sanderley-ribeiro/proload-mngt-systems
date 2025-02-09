@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ManifestFormHeader from "./ManifestFormHeader";
 import ManifestItem from "./ManifestItem";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,7 @@ export default function ManifestForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [items, setItems] = useState<ManifestItem[]>([]);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: products } = useQuery({
     queryKey: ["products"],
@@ -72,6 +73,9 @@ export default function ManifestForm() {
         );
 
       if (itemsError) throw itemsError;
+
+      // Invalidar a query para atualizar a lista
+      queryClient.invalidateQueries({ queryKey: ["manifests"] });
 
       toast({
         title: "Romaneio criado com sucesso!",

@@ -1,6 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ManifestForm from "@/components/loading/ManifestForm";
+import ManifestList from "@/components/loading/ManifestList";
 
 const Loading = () => {
   return (
@@ -13,6 +14,15 @@ const Loading = () => {
         </CardHeader>
         <CardContent>
           <ManifestForm />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Romaneios</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ManifestList />
         </CardContent>
       </Card>
     </div>
