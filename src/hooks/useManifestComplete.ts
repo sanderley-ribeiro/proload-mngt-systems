@@ -16,7 +16,15 @@ export function useManifestComplete(manifestId: string) {
         .from("shipping_manifests")
         .update({ status: "finalizado" })
         .eq("id", manifestId)
-        .select()
+        .select(`
+          number,
+          shipping_manifest_items (
+            quantity,
+            product:products (
+              name
+            )
+          )
+        `)
         .single();
 
       if (error) {
@@ -27,11 +35,20 @@ export function useManifestComplete(manifestId: string) {
       console.log("Manifest finalized successfully:", data);
       return data;
     },
-    onSuccess: () => {
-      toast.success("Romaneio finalizado com sucesso");
-      // Invalidate both the manifest list and the specific manifest queries
+    onSuccess: (data) => {
+      // Create a summary message of products that were deducted from stock
+      const productSummary = data.shipping_manifest_items
+        .map(item => `${item.product.name}: ${item.quantity}`)
+        .join(', ');
+      
+      toast.success(`Romaneio #${data.number} finalizado e estoque atualizado.`, {
+        description: `Produtos deduzidos: ${productSummary}`
+      });
+
+      // Invalidate relevant queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["manifests"] });
       queryClient.invalidateQueries({ queryKey: ["manifest", manifestId] });
+      queryClient.invalidateQueries({ queryKey: ["stock-levels"] }); // Refresh dashboard stock data
       navigate("/loading");
     },
     onError: (error) => {
