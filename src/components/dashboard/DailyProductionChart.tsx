@@ -16,6 +16,10 @@ export const DailyProductionChart = () => {
   const { data: productionData, isLoading: productionLoading } = useQuery({
     queryKey: ["daily-production"],
     queryFn: async () => {
+      const twoDaysAgo = new Date();
+      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+      twoDaysAgo.setHours(0, 0, 0, 0);
+
       const { data, error } = await supabase
         .from("daily_production_view")
         .select(`
@@ -23,11 +27,12 @@ export const DailyProductionChart = () => {
           total_production,
           product:products(name)
         `)
-        .order('production_date', { ascending: false })
-        .gte('production_date', new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString())
+        .gte('production_date', twoDaysAgo.toISOString())
         .order('production_date', { ascending: true });
 
       if (error) throw error;
+
+      console.log("Production data from API:", data); // Debug log
 
       return data.map((item: any) => ({
         date: format(new Date(item.production_date), 'dd/MM', { locale: ptBR }),
@@ -36,6 +41,8 @@ export const DailyProductionChart = () => {
       }));
     }
   });
+
+  console.log("Formatted production data:", productionData); // Debug log
 
   return (
     <Card>
