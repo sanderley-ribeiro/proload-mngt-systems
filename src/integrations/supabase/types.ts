@@ -59,24 +59,24 @@ export type Database = {
       }
       products: {
         Row: {
+          barcode: string
           created_at: string
-          description: string | null
           id: string
           name: string
           unit: string
           updated_at: string
         }
         Insert: {
+          barcode: string
           created_at?: string
-          description?: string | null
           id?: string
           name: string
           unit: string
           updated_at?: string
         }
         Update: {
+          barcode?: string
           created_at?: string
-          description?: string | null
           id?: string
           name?: string
           unit?: string
