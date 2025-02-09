@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +24,7 @@ export default function ManifestForm() {
   const [items, setItems] = useState<ManifestItem[]>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const formRef = useRef<HTMLFormElement>(null);
 
   const { data: products } = useQuery({
     queryKey: ["products"],
@@ -55,7 +56,6 @@ export default function ManifestForm() {
           driver_name: formData.get("driver_name") as string,
           client_name: formData.get("client_name") as string,
           vehicle_plate: formData.get("vehicle_plate") as string,
-          number: formData.get("number") as string,
           created_by: profile.user.id,
         })
         .select()
@@ -83,8 +83,10 @@ export default function ManifestForm() {
         title: "Romaneio criado com sucesso!",
       });
       
-      // Limpar o formulário
-      e.currentTarget.reset();
+      // Limpar o formulário usando a referência
+      if (formRef.current) {
+        formRef.current.reset();
+      }
       setItems([]);
       
     } catch (error: any) {
@@ -117,7 +119,7 @@ export default function ManifestForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
       <ManifestFormHeader disabled={isLoading} />
 
       <div className="space-y-4">
