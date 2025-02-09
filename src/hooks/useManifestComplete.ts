@@ -15,22 +15,28 @@ export function useManifestComplete(manifestId: string) {
         .update({ status: "completed" })
         .eq("id", manifestId)
         .select()
-        .maybeSingle(); // Alterado de .single() para .maybeSingle()
+        .maybeSingle();
 
-      if (error) throw error;
-      if (!data) throw new Error("Romaneio não encontrado");
+      if (error) {
+        console.error("Erro ao finalizar romaneio:", error);
+        throw error;
+      }
+      
+      if (!data) {
+        throw new Error("Romaneio não encontrado");
+      }
       
       return data;
     },
     onSuccess: () => {
       toast.success("Romaneio finalizado com sucesso");
-      // Atualiza o cache do React Query
       queryClient.invalidateQueries({ queryKey: ["manifest", manifestId] });
       navigate("/loading");
     },
     onError: (error) => {
       console.error("Erro ao finalizar romaneio:", error);
       toast.error("Erro ao finalizar romaneio");
+      navigate("/loading");
     }
   });
 
