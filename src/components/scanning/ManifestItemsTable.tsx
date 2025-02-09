@@ -55,7 +55,7 @@ export function ManifestItemsTable({
               const scannedQuantity = item.scanned_at?.length || 0;
               const isItemComplete = scannedQuantity >= item.quantity;
               const lastScan = item.scanned_at?.length 
-                ? new Date(item.scanned_at[item.scanned_at.length - 1]).toLocaleString()
+                ? new Date(item.scanned_at[item.scanned_at.length - 1]).toLocaleString('pt-BR')
                 : '-';
 
               return (
