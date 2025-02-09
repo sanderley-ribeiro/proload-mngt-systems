@@ -57,7 +57,6 @@ export function ManifestItemsTable({
           <TableBody>
             {items.map((item) => {
               const scannedQuantity = item.scanned_at?.length || 0;
-              console.log(`Item ${item.product.name} scanned quantity:`, scannedQuantity); // Debug log
               const isItemComplete = scannedQuantity >= item.quantity;
               const lastScan = item.scanned_at?.length 
                 ? new Date(item.scanned_at[item.scanned_at.length - 1]).toLocaleString('pt-BR')
