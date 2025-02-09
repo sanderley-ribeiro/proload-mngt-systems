@@ -1,6 +1,6 @@
 
-import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,16 +14,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ArrowLeft } from "lucide-react";
 
 interface ManifestItem {
   id: string;
   product_id: string;
   quantity: number;
+  scanned_at: string[];
   product: {
     name: string;
     unit: string;
   };
-  scanned_quantity?: number;
 }
 
 interface ManifestData {
@@ -31,11 +32,13 @@ interface ManifestData {
   client_name: string;
   driver_name: string;
   items: ManifestItem[];
+  status: string;
 }
 
 export default function ManifestScanning() {
   const { id } = useParams();
-  const [scannedItems, setScannedItems] = useState<Record<string, number>>({});
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [barcode, setBarcode] = useState("");
   const [isComplete, setIsComplete] = useState(false);
 
@@ -48,10 +51,12 @@ export default function ManifestScanning() {
           id,
           client_name,
           driver_name,
+          status,
           items:manifest_items(
             id,
             product_id,
             quantity,
+            scanned_at,
             product:products(
               name,
               unit
@@ -63,6 +68,35 @@ export default function ManifestScanning() {
 
       if (error) throw error;
       return data as ManifestData;
+    },
+  });
+
+  const updateItemMutation = useMutation({
+    mutationFn: async ({ itemId, scannedAt }: { itemId: string; scannedAt: string[] }) => {
+      const { error } = await supabase
+        .from("manifest_items")
+        .update({ scanned_at: scannedAt })
+        .eq("id", itemId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["manifest", id] });
+    },
+  });
+
+  const completeManifestMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("shipping_manifests")
+        .update({ status: "completed" })
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Romaneio finalizado com sucesso");
+      navigate("/loading");
     },
   });
 
@@ -86,18 +120,16 @@ export default function ManifestScanning() {
     if (!manifest) return;
 
     const allItemsComplete = manifest.items.every((item) => {
-      const scannedQuantity = scannedItems[item.product_id] || 0;
-      return scannedQuantity >= item.quantity;
+      return (item.scanned_at?.length || 0) >= item.quantity;
     });
 
     setIsComplete(allItemsComplete);
-  }, [scannedItems, manifest]);
+  }, [manifest]);
 
   const handleBarcodeScan = (scannedBarcode: string) => {
     if (!manifest) return;
 
     // In this example, we're using the product_id as the barcode
-    // In a real application, you'd need to map barcodes to product IDs
     const item = manifest.items.find((item) => item.product_id === scannedBarcode);
 
     if (!item) {
@@ -105,20 +137,24 @@ export default function ManifestScanning() {
       return;
     }
 
-    const currentQuantity = scannedItems[item.product_id] || 0;
-    const newQuantity = currentQuantity + 1;
-
-    if (newQuantity > item.quantity) {
+    const currentScans = item.scanned_at || [];
+    if (currentScans.length >= item.quantity) {
       toast.error("Quantidade excede o total do romaneio");
       return;
     }
 
-    setScannedItems((prev) => ({
-      ...prev,
-      [item.product_id]: newQuantity,
-    }));
+    const newScans = [...currentScans, new Date().toISOString()];
+    updateItemMutation.mutate({
+      itemId: item.id,
+      scannedAt: newScans,
+    });
 
     toast.success(`${item.product.name} escaneado com sucesso`);
+  };
+
+  const handleComplete = () => {
+    if (!isComplete) return;
+    completeManifestMutation.mutate();
   };
 
   if (isLoading) {
@@ -131,9 +167,15 @@ export default function ManifestScanning() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">
-        Escaneamento de Romaneio
-      </h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">
+          Escaneamento de Romaneio
+        </h1>
+        <Button variant="outline" onClick={() => navigate("/loading")}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar
+        </Button>
+      </div>
 
       <Card>
         <CardHeader>
@@ -163,12 +205,16 @@ export default function ManifestScanning() {
                 <TableHead>Unidade</TableHead>
                 <TableHead className="text-right">Escaneado</TableHead>
                 <TableHead className="text-right">Total</TableHead>
+                <TableHead>Último Escaneamento</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {manifest.items.map((item) => {
-                const scannedQuantity = scannedItems[item.product_id] || 0;
+                const scannedQuantity = item.scanned_at?.length || 0;
                 const isItemComplete = scannedQuantity >= item.quantity;
+                const lastScan = item.scanned_at?.length 
+                  ? new Date(item.scanned_at[item.scanned_at.length - 1]).toLocaleString()
+                  : '-';
 
                 return (
                   <TableRow key={item.id}>
@@ -184,6 +230,7 @@ export default function ManifestScanning() {
                       </span>
                     </TableCell>
                     <TableCell className="text-right">{item.quantity}</TableCell>
+                    <TableCell>{lastScan}</TableCell>
                   </TableRow>
                 );
               })}
@@ -191,7 +238,12 @@ export default function ManifestScanning() {
           </Table>
 
           <div className="mt-6">
-            <Button disabled={!isComplete}>Finalizar Romaneio</Button>
+            <Button 
+              disabled={!isComplete || manifest.status === 'completed'} 
+              onClick={handleComplete}
+            >
+              Finalizar Romaneio
+            </Button>
           </div>
         </CardContent>
       </Card>
