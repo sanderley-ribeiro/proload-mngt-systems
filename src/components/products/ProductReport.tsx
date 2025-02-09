@@ -51,7 +51,7 @@ export default function ProductReport() {
   const [endDate, setEndDate] = useState(
     format(new Date().setHours(23, 59, 59, 999), "yyyy-MM-dd'T'HH:mm")
   );
-  const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [filter, setFilter] = useState({
     startDate,
     endDate,
@@ -177,14 +177,14 @@ export default function ProductReport() {
         <div className="grid gap-2">
           <Label htmlFor="product">Produto</Label>
           <Select
-            value={selectedProductId}
-            onValueChange={setSelectedProductId}
+            value={selectedProductId || "all"}
+            onValueChange={(value) => setSelectedProductId(value === "all" ? null : value)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Todos os produtos" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os produtos</SelectItem>
+              <SelectItem value="all">Todos os produtos</SelectItem>
               {products?.map((product) => (
                 <SelectItem key={product.id} value={product.id}>
                   {product.name} ({product.unit})
