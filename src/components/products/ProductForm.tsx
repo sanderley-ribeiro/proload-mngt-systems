@@ -98,6 +98,24 @@ export default function ProductForm() {
 
   const handleDelete = async (productId: string) => {
     try {
+      // First check if the product is being used in any shipping manifest
+      const { data: manifestItems, error: checkError } = await supabase
+        .from("shipping_manifest_items")
+        .select("id")
+        .eq("product_id", productId)
+        .limit(1);
+
+      if (checkError) throw checkError;
+
+      if (manifestItems && manifestItems.length > 0) {
+        toast({
+          title: "Não é possível excluir o produto",
+          description: "Este produto está sendo utilizado em um ou mais romaneios e não pode ser excluído.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from("products")
         .delete()
