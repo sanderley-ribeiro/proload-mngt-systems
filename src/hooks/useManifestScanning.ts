@@ -164,11 +164,15 @@ export function useManifestScanning(manifestId: string) {
       if (!oldData) return oldData;
       return {
         ...oldData,
-        items: oldData.items.map((i) => 
-          i.id === itemId 
-            ? { ...i, scanned_at: newScans }
-            : i
-        ),
+        items: oldData.items.map((i) => {
+          if (i.id === itemId) {
+            return {
+              ...i,
+              scanned_at: newScans,
+            };
+          }
+          return i;
+        }),
       };
     });
 
