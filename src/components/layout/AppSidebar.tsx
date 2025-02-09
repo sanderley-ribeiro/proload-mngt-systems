@@ -9,8 +9,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebarContext,
 } from "@/components/ui/sidebar";
 import { Link, useLocation } from "react-router-dom";
+import { useMobile } from "@/hooks/use-mobile";
 
 const menuItems = [
   {
@@ -42,6 +44,14 @@ const menuItems = [
 
 export function AppSidebar() {
   const location = useLocation();
+  const isMobile = useMobile();
+  const { setCollapsed } = useSidebarContext();
+
+  const handleItemClick = () => {
+    if (isMobile) {
+      setCollapsed(true);
+    }
+  };
 
   return (
     <Sidebar className="bg-background border-r shadow-lg">
@@ -60,6 +70,7 @@ export function AppSidebar() {
                     <Link 
                       to={item.path} 
                       className="flex items-center gap-2 p-2 rounded-md transition-colors duration-200"
+                      onClick={handleItemClick}
                     >
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
