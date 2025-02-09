@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,7 +87,7 @@ export default function ProductMovement() {
   });
 
   // Subscribe to real-time changes
-  useState(() => {
+  useEffect(() => {
     const channel = supabase
       .channel('schema-db-changes')
       .on(
