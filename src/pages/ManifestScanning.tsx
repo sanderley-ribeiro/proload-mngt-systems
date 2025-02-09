@@ -6,13 +6,18 @@ import { useManifestScanning } from "@/hooks/useManifestScanning";
 
 export default function ManifestScanning() {
   const { id } = useParams();
+
+  if (!id) {
+    return <div>ID do romaneio não fornecido</div>;
+  }
+
   const { 
     manifest, 
     isLoading, 
     isComplete,
     handleComplete,
     handleScanItem
-  } = useManifestScanning(id!);
+  } = useManifestScanning(id);
 
   if (isLoading) {
     return <div>Carregando...</div>;
