@@ -15,16 +15,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 
+interface ProductInfo {
+  name: string;
+  unit: string;
+}
+
 interface Movement {
   id: string;
-  product: {
-    name: string;
-    unit: string;
-  };
   type: "input" | "output";
   quantity: number;
   date: string;
   notes: string;
+  products: ProductInfo;
 }
 
 export default function ProductReport() {
@@ -35,7 +37,7 @@ export default function ProductReport() {
     format(new Date().setHours(23, 59, 59, 999), "yyyy-MM-dd'T'HH:mm")
   );
 
-  const { data: movements } = useQuery({
+  const { data: movements } = useQuery<Movement[]>({
     queryKey: ["movements", startDate, endDate],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -102,7 +104,7 @@ export default function ProductReport() {
                   {format(new Date(movement.date), "dd/MM/yyyy HH:mm")}
                 </TableCell>
                 <TableCell>
-                  {movement.product.name} ({movement.product.unit})
+                  {movement.products.name} ({movement.products.unit})
                 </TableCell>
                 <TableCell>
                   {movement.type === "input" ? "Entrada" : "Saída"}
