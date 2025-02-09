@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface ShippingManifest {
   id: string;
@@ -20,6 +21,7 @@ interface ShippingManifest {
 }
 
 export default function ManifestList() {
+  const navigate = useNavigate();
   const { data: manifests, isLoading } = useQuery({
     queryKey: ["manifests"],
     queryFn: async () => {
@@ -57,7 +59,11 @@ export default function ManifestList() {
               <TableCell>{manifest.driver_name}</TableCell>
               <TableCell>{manifest.client_name}</TableCell>
               <TableCell>
-                <Button variant="ghost" size="icon">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate(`/loading/${manifest.id}/scan`)}
+                >
                   <FileText className="h-4 w-4" />
                 </Button>
               </TableCell>

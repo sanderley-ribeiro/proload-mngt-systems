@@ -15,6 +15,7 @@ import AppLayout from "./components/layout/AppLayout";
 import Login from "./pages/Login";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import ManifestScanning from "./pages/ManifestScanning";
 import { StrictMode } from "react";
 
 // Create a client
@@ -50,6 +51,7 @@ const App = () => (
                   <Route path="products" element={<Products />} />
                   <Route path="production" element={<Production />} />
                   <Route path="loading" element={<Loading />} />
+                  <Route path="loading/:id/scan" element={<ManifestScanning />} />
                   <Route path="report" element={<Report />} />
                   <Route path="*" element={<NotFound />} />
                 </Route>
