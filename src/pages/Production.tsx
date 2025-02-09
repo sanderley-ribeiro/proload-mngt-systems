@@ -1,6 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ProductMovement from "@/components/products/ProductMovement";
+import { Suspense } from "react";
 
 const Production = () => {
   return (
@@ -12,7 +13,9 @@ const Production = () => {
           <CardTitle>Entrada/Saída de Produtos</CardTitle>
         </CardHeader>
         <CardContent>
-          <ProductMovement />
+          <Suspense fallback={<div>Carregando...</div>}>
+            <ProductMovement />
+          </Suspense>
         </CardContent>
       </Card>
     </div>

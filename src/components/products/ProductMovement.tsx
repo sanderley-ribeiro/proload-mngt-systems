@@ -49,7 +49,7 @@ export default function ProductMovement() {
   const formRef = useRef<HTMLFormElement>(null);
   const queryClient = useQueryClient();
 
-  const { data: products } = useQuery({
+  const { data: products, isError: isProductsError, error: productsError } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -62,7 +62,7 @@ export default function ProductMovement() {
     },
   });
 
-  const { data: recentMovements } = useQuery({
+  const { data: recentMovements, isError: isMovementsError, error: movementsError } = useQuery({
     queryKey: ["recent-movements"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -85,6 +85,24 @@ export default function ProductMovement() {
       return data as Movement[];
     },
   });
+
+  // Handle errors
+  useEffect(() => {
+    if (isProductsError) {
+      toast({
+        title: "Erro ao carregar produtos",
+        description: productsError?.message,
+        variant: "destructive",
+      });
+    }
+    if (isMovementsError) {
+      toast({
+        title: "Erro ao carregar movimentações",
+        description: movementsError?.message,
+        variant: "destructive",
+      });
+    }
+  }, [isProductsError, isMovementsError, productsError, movementsError, toast]);
 
   // Subscribe to real-time changes
   useEffect(() => {
@@ -148,6 +166,14 @@ export default function ProductMovement() {
       setIsLoading(false);
     }
   };
+
+  if (isProductsError || isMovementsError) {
+    return (
+      <div className="text-center py-4 text-red-600">
+        Erro ao carregar dados. Por favor, recarregue a página.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
