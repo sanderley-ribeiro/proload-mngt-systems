@@ -31,6 +31,7 @@ export function useManifestData(manifestId: string) {
   return useQuery({
     queryKey: ["manifest", manifestId],
     queryFn: async () => {
+      // First try to get manifest data
       const { data: manifestData, error: manifestError } = await supabase
         .from("shipping_manifests")
         .select(`
@@ -47,17 +48,24 @@ export function useManifestData(manifestId: string) {
       if (manifestError) {
         console.error("Erro ao buscar romaneio:", manifestError);
         toast.error("Erro ao buscar romaneio");
-        navigate("/loading");
+        // Don't redirect if we're already on the loading page
+        if (!window.location.pathname.includes("/loading")) {
+          navigate("/loading");
+        }
         throw manifestError;
       }
 
       if (!manifestData) {
         console.error("Romaneio não encontrado:", manifestId);
         toast.error("Romaneio não encontrado");
-        navigate("/loading");
+        // Don't redirect if we're already on the loading page
+        if (!window.location.pathname.includes("/loading")) {
+          navigate("/loading");
+        }
         throw new Error("Romaneio não encontrado");
       }
 
+      // If manifest exists, get its items
       const { data: itemsData, error: itemsError } = await supabase
         .from("shipping_manifest_items")
         .select(`
@@ -87,3 +95,4 @@ export function useManifestData(manifestId: string) {
 }
 
 export type { ManifestData, ManifestItem };
+
