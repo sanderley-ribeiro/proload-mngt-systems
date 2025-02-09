@@ -1,5 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ProductMovement from "@/components/products/ProductMovement";
 
 const Production = () => {
   return (
@@ -8,12 +9,10 @@ const Production = () => {
       
       <Card>
         <CardHeader>
-          <CardTitle>Gerenciamento de Produção</CardTitle>
+          <CardTitle>Entrada/Saída de Produtos</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[400px] flex items-center justify-center text-muted-foreground">
-            Interface de Gerenciamento de Produção Em Breve
-          </div>
+          <ProductMovement />
         </CardContent>
       </Card>
     </div>
