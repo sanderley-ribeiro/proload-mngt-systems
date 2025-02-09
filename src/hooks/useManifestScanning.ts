@@ -159,12 +159,7 @@ export function useManifestScanning(manifestId: string) {
 
     const newScans = [...currentScans, new Date().toISOString()];
     
-    updateItemMutation.mutate({
-      itemId: item.id,
-      scannedAt: newScans,
-    });
-
-    // Optimistically update the UI
+    // Optimistically update the UI before making the API call
     queryClient.setQueryData(["manifest", manifestId], (oldData: ManifestData | undefined) => {
       if (!oldData) return oldData;
       
@@ -176,6 +171,12 @@ export function useManifestScanning(manifestId: string) {
             : i
         )
       };
+    });
+
+    // Make the API call to update the database
+    updateItemMutation.mutate({
+      itemId: item.id,
+      scannedAt: newScans,
     });
 
     toast.success(`${item.product.name} adicionado com sucesso`);
