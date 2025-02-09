@@ -14,22 +14,22 @@ import { Link, useLocation } from "react-router-dom";
 
 const menuItems = [
   {
-    title: "Dashboard",
+    title: "Painel",
     path: "/",
     icon: LayoutDashboard,
   },
   {
-    title: "Products",
+    title: "Produtos",
     path: "/products",
     icon: Package,
   },
   {
-    title: "Production",
+    title: "Produção",
     path: "/production",
     icon: Factory,
   },
   {
-    title: "Loading",
+    title: "Carregamento",
     path: "/loading",
     icon: Truck,
   },
@@ -42,14 +42,14 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Management System</SidebarGroupLabel>
+          <SidebarGroupLabel>Sistema de Gerenciamento</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton
                     asChild
-                    active={location.pathname === item.path}
+                    isActive={location.pathname === item.path}
                   >
                     <Link to={item.path} className="flex items-center gap-2">
                       <item.icon className="h-4 w-4" />
