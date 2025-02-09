@@ -44,8 +44,15 @@ export function useManifestData(manifestId: string) {
         .eq("id", manifestId)
         .maybeSingle();
 
-      if (manifestError) throw manifestError;
+      if (manifestError) {
+        console.error("Erro ao buscar romaneio:", manifestError);
+        toast.error("Erro ao buscar romaneio");
+        navigate("/loading");
+        throw manifestError;
+      }
+
       if (!manifestData) {
+        console.error("Romaneio não encontrado:", manifestId);
         toast.error("Romaneio não encontrado");
         navigate("/loading");
         throw new Error("Romaneio não encontrado");
@@ -65,7 +72,11 @@ export function useManifestData(manifestId: string) {
         `)
         .eq("manifest_id", manifestId);
 
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        console.error("Erro ao buscar itens do romaneio:", itemsError);
+        toast.error("Erro ao buscar itens do romaneio");
+        throw itemsError;
+      }
 
       return {
         ...manifestData,
