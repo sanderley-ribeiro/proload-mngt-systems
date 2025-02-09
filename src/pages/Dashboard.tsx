@@ -60,7 +60,7 @@ const Dashboard = () => {
           product:products(name)
         `)
         .order('production_date', { ascending: false })
-        .limit(10);
+        .limit(2);
 
       if (error) throw error;
 
@@ -174,12 +174,13 @@ const Dashboard = () => {
                       >
                         <LabelList 
                           content={({ x, y, value, width, height }) => {
-                            const productName = productionData[x / width]?.product;
+                            const index = Math.floor(Number(x) / Number(width));
+                            const productName = productionData[index]?.product;
                             return (
                               <g>
                                 <text
-                                  x={x + width / 2}
-                                  y={y - 10}
+                                  x={Number(x) + Number(width) / 2}
+                                  y={Number(y) - 10}
                                   fill="#374151"
                                   textAnchor="middle"
                                   fontSize={12}
@@ -187,8 +188,8 @@ const Dashboard = () => {
                                   {value?.toLocaleString()}
                                 </text>
                                 <text
-                                  x={x + width / 2}
-                                  y={y + height + 15}
+                                  x={Number(x) + Number(width) / 2}
+                                  y={Number(y) + Number(height) + 15}
                                   fill="#374151"
                                   textAnchor="middle"
                                   fontSize={10}
