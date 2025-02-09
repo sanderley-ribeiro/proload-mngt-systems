@@ -59,11 +59,11 @@ export default function ManifestForm() {
       // Criar o romaneio
       const { data: manifest, error: manifestError } = await supabase
         .from("shipping_manifests")
-        .insert({
+        .insert([{
           driver_name: formData.get("driver_name"),
           client_name: formData.get("client_name"),
           created_by: profile.user.id,
-        })
+        }])
         .select()
         .single();
 
