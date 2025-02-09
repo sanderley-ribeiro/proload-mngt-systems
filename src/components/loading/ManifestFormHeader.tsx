@@ -21,16 +21,9 @@ export default function ManifestFormHeader({ disabled }: ManifestFormHeaderProps
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="grid gap-2">
-          <Label htmlFor="vehicle_plate">Placa do Veículo</Label>
-          <Input id="vehicle_plate" name="vehicle_plate" required disabled={disabled} />
-        </div>
-        
-        <div className="grid gap-2">
-          <Label htmlFor="number">Número do Romaneio</Label>
-          <Input id="number" name="number" required disabled={disabled} />
-        </div>
+      <div className="grid gap-2">
+        <Label htmlFor="vehicle_plate">Placa do Veículo</Label>
+        <Input id="vehicle_plate" name="vehicle_plate" required disabled={disabled} />
       </div>
     </div>
   );

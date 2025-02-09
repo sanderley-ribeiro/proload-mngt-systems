@@ -12,12 +12,15 @@ import {
 } from "@/components/ui/table";
 import { FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
 interface ShippingManifest {
   id: string;
   created_at: string;
   driver_name: string;
   client_name: string;
+  number: string;
+  status: string;
 }
 
 export default function ManifestList() {
@@ -39,33 +42,65 @@ export default function ManifestList() {
     return <div>Carregando...</div>;
   }
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "success";
+      case "pending":
+        return "warning";
+      default:
+        return "secondary";
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "Finalizado";
+      case "pending":
+        return "Em Aberto";
+      default:
+        return status;
+    }
+  };
+
   return (
     <div>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Data</TableHead>
+            <TableHead>Nº</TableHead>
+            <TableHead>Data/Hora</TableHead>
             <TableHead>Motorista</TableHead>
             <TableHead>Cliente</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead className="w-[100px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {manifests?.map((manifest) => (
             <TableRow key={manifest.id}>
+              <TableCell>{manifest.number}</TableCell>
               <TableCell>
-                {new Date(manifest.created_at).toLocaleDateString("pt-BR")}
+                {new Date(manifest.created_at).toLocaleString("pt-BR")}
               </TableCell>
               <TableCell>{manifest.driver_name}</TableCell>
               <TableCell>{manifest.client_name}</TableCell>
               <TableCell>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => navigate(`/loading/${manifest.id}/scan`)}
-                >
-                  <FileText className="h-4 w-4" />
-                </Button>
+                <Badge variant={getStatusColor(manifest.status)}>
+                  {getStatusText(manifest.status)}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                {manifest.status === "pending" && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => navigate(`/loading/${manifest.id}/scan`)}
+                  >
+                    <FileText className="h-4 w-4" />
+                  </Button>
+                )}
               </TableCell>
             </TableRow>
           ))}
