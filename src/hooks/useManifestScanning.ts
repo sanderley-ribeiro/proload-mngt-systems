@@ -35,8 +35,23 @@ export function useManifestScanning(manifestId: string) {
   const { data: manifest, isLoading } = useQuery({
     queryKey: ["manifest", manifestId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("manifest_items")
+      const { data: manifestData, error: manifestError } = await supabase
+        .from("shipping_manifests")
+        .select(`
+          id,
+          number,
+          client_name,
+          driver_name,
+          vehicle_plate,
+          status
+        `)
+        .eq("id", manifestId)
+        .single();
+
+      if (manifestError) throw manifestError;
+
+      const { data: itemsData, error: itemsError } = await supabase
+        .from("shipping_manifest_items")
         .select(`
           id,
           product_id,
@@ -45,34 +60,15 @@ export function useManifestScanning(manifestId: string) {
           product:products(
             name,
             unit
-          ),
-          manifest:shipping_manifests(
-            id,
-            number,
-            client_name,
-            driver_name,
-            vehicle_plate,
-            status
           )
         `)
         .eq("manifest_id", manifestId);
 
-      if (error) throw error;
+      if (itemsError) throw itemsError;
 
-      if (!data || data.length === 0) {
-        throw new Error("Manifest not found");
-      }
-
-      const manifestData = data[0].manifest;
       return {
         ...manifestData,
-        items: data.map(item => ({
-          id: item.id,
-          product_id: item.product_id,
-          quantity: item.quantity,
-          scanned_at: item.scanned_at,
-          product: item.product
-        }))
+        items: itemsData,
       } as ManifestData;
     },
   });
@@ -80,7 +76,7 @@ export function useManifestScanning(manifestId: string) {
   const updateItemMutation = useMutation({
     mutationFn: async ({ itemId, scannedAt }: { itemId: string; scannedAt: string[] }) => {
       const { error } = await supabase
-        .from("manifest_items")
+        .from("shipping_manifest_items")
         .update({ scanned_at: scannedAt })
         .eq("id", itemId);
 
