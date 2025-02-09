@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 
 interface StockData {
@@ -48,7 +48,7 @@ const Dashboard = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Estoque Atual</CardTitle>
+          <CardTitle>Estoque Atual de Produto Acabado</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-[400px] w-full">
@@ -68,7 +68,19 @@ const Dashboard = () => {
                   />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="quantidade" fill="#4f46e5" name="Quantidade em Estoque" />
+                  <Bar 
+                    dataKey="quantidade" 
+                    fill="#4f46e5" 
+                    name="Quantidade em Estoque"
+                    barSize={40}
+                  >
+                    <LabelList 
+                      dataKey="quantidade" 
+                      position="top" 
+                      fill="#374151"
+                      formatter={(value: number) => value.toLocaleString()}
+                    />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             ) : (
