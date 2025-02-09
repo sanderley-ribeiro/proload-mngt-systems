@@ -47,8 +47,27 @@ export default function ProductForm() {
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
+    const productName = formData.get("name") as string;
+
+    // Check if a product with the same name already exists
+    const { data: existingProduct } = await supabase
+      .from("products")
+      .select("name")
+      .eq("name", productName)
+      .single();
+
+    if (existingProduct) {
+      toast({
+        title: "Erro ao cadastrar produto",
+        description: "Já existe um produto cadastrado com este nome",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
     const data = {
-      name: formData.get("name") as string,
+      name: productName,
       barcode: formData.get("barcode") as string,
       unit: formData.get("unit") as string,
     };
