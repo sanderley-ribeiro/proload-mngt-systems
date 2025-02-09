@@ -66,7 +66,7 @@ export function ManifestItemsTable({
                 <TableRow key={item.id}>
                   <TableCell>{item.product.name}</TableCell>
                   <TableCell>{item.product.unit}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right font-medium">
                     <span
                       className={
                         isItemComplete ? "text-green-600" : "text-red-600"
@@ -75,7 +75,7 @@ export function ManifestItemsTable({
                       {scannedQuantity}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right">{item.quantity}</TableCell>
+                  <TableCell className="text-right font-medium">{item.quantity}</TableCell>
                   <TableCell>{lastScan}</TableCell>
                   <TableCell>
                     <Button

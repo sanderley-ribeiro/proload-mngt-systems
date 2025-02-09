@@ -126,7 +126,8 @@ export function useManifestScanning(manifestId: string) {
     if (!manifest) return;
 
     const allItemsComplete = manifest.items.every((item) => {
-      return (item.scanned_at?.length || 0) >= item.quantity;
+      const scannedCount = item.scanned_at?.length || 0;
+      return scannedCount >= item.quantity;
     });
 
     setIsComplete(allItemsComplete);
@@ -152,14 +153,16 @@ export function useManifestScanning(manifestId: string) {
     if (!item) return;
 
     const currentScans = item.scanned_at || [];
-    if (currentScans.length >= item.quantity) {
+    const scannedCount = currentScans.length;
+
+    if (scannedCount >= item.quantity) {
       toast.error("Quantidade máxima atingida");
       return;
     }
 
     const newScans = [...currentScans, new Date().toISOString()];
 
-    // Optimistically update the UI
+    // Update the UI optimistically
     queryClient.setQueryData(["manifest", manifestId], (oldData: ManifestData | undefined) => {
       if (!oldData) return oldData;
       return {
@@ -176,13 +179,14 @@ export function useManifestScanning(manifestId: string) {
       };
     });
 
-    // Make the API call to update the database
+    // Update the database
     updateItemMutation.mutate({
       itemId,
       scannedAt: newScans,
     });
 
-    toast.success(`${item.product.name} adicionado com sucesso`);
+    const newCount = scannedCount + 1;
+    toast.success(`${item.product.name}: ${newCount}/${item.quantity} escaneados`);
   };
 
   const handleComplete = () => {
