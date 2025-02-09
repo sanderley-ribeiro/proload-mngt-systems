@@ -49,31 +49,32 @@ export default function ProductForm() {
     const formData = new FormData(e.currentTarget);
     const productName = formData.get("name") as string;
 
-    // Check if a product with the same name already exists
-    const { data: existingProducts } = await supabase
-      .from("products")
-      .select("name")
-      .eq("name", productName);
-
-    if (existingProducts && existingProducts.length > 0) {
-      toast({
-        title: "Erro ao cadastrar produto",
-        description: "Já existe um produto cadastrado com este nome",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-      return;
-    }
-
-    const data = {
-      name: productName,
-      barcode: formData.get("barcode") as string,
-      unit: formData.get("unit") as string,
-    };
-
     try {
-      const { error } = await supabase.from("products").insert(data);
-      if (error) throw error;
+      // Check if a product with the same name already exists
+      const { data: existingProducts, error: searchError } = await supabase
+        .from("products")
+        .select("name")
+        .eq("name", productName);
+
+      if (searchError) throw searchError;
+
+      if (existingProducts && existingProducts.length > 0) {
+        toast({
+          title: "Erro ao cadastrar produto",
+          description: "Já existe um produto cadastrado com este nome",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const data = {
+        name: productName,
+        barcode: formData.get("barcode") as string,
+        unit: formData.get("unit") as string,
+      };
+
+      const { error: insertError } = await supabase.from("products").insert(data);
+      if (insertError) throw insertError;
 
       toast({
         title: "Produto cadastrado com sucesso!",

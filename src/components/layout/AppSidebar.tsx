@@ -9,10 +9,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebarContext,
 } from "@/components/ui/sidebar";
 import { Link, useLocation } from "react-router-dom";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const menuItems = [
   {
@@ -44,12 +43,14 @@ const menuItems = [
 
 export function AppSidebar() {
   const location = useLocation();
-  const isMobile = useMobile();
-  const { setCollapsed } = useSidebarContext();
+  const isMobile = useIsMobile();
 
   const handleItemClick = () => {
     if (isMobile) {
-      setCollapsed(true);
+      const sidebarButton = document.querySelector('[data-sidebar="trigger"]') as HTMLButtonElement;
+      if (sidebarButton) {
+        sidebarButton.click();
+      }
     }
   };
 
