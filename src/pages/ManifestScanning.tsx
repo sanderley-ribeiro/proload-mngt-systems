@@ -48,7 +48,7 @@ export default function ManifestScanning() {
           id,
           client_name,
           driver_name,
-          items:shipping_manifest_items(
+          items:manifest_items(
             id,
             product_id,
             quantity,

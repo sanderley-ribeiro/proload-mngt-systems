@@ -174,6 +174,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "shipping_manifest_items_manifest_id_fkey"
+            columns: ["manifest_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_manifests"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "shipping_manifest_items_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
