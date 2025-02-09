@@ -57,6 +57,7 @@ export default function ManifestForm() {
           client_name: formData.get("client_name") as string,
           vehicle_plate: formData.get("vehicle_plate") as string,
           created_by: profile.user.id,
+          number: '0', // O número será gerado automaticamente pelo trigger
         })
         .select()
         .single();

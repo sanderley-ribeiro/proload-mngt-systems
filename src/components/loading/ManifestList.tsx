@@ -22,10 +22,10 @@ interface ShippingManifest {
   number: string;
   status: string;
   items: {
+    quantity: number;
     product: {
       name: string;
     };
-    quantity: number;
   }[];
 }
 
@@ -38,7 +38,7 @@ export default function ManifestList() {
         .from("shipping_manifests")
         .select(`
           *,
-          items:manifest_items(
+          items:shipping_manifest_items(
             quantity,
             product:products(
               name
