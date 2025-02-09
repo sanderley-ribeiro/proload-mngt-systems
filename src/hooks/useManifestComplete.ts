@@ -12,7 +12,7 @@ export function useManifestComplete(manifestId: string) {
     mutationFn: async () => {
       const { data, error } = await supabase
         .from("shipping_manifests")
-        .update({ status: "completed" })
+        .update({ status: "finalizado" })
         .eq("id", manifestId)
         .select()
         .maybeSingle();

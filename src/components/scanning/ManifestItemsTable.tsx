@@ -37,7 +37,7 @@ export function ManifestItemsTable({
   onComplete,
   onScanItem 
 }: ManifestItemsTableProps) {
-  const isCompleted = status === 'completed';
+  const isCompleted = status === 'finalizado';
 
   return (
     <Card>
