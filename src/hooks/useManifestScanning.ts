@@ -18,8 +18,10 @@ interface ManifestItem {
 
 interface ManifestData {
   id: string;
+  number: string;
   client_name: string;
   driver_name: string;
+  vehicle_plate: string;
   items: ManifestItem[];
   status: string;
 }
@@ -37,8 +39,10 @@ export function useManifestScanning(manifestId: string) {
         .from("shipping_manifests")
         .select(`
           id,
+          number,
           client_name,
           driver_name,
+          vehicle_plate,
           status,
           items:manifest_items(
             id,
@@ -133,7 +137,7 @@ export function useManifestScanning(manifestId: string) {
 
     const currentScans = item.scanned_at || [];
     if (currentScans.length >= item.quantity) {
-      toast.error("Quantidade excede o total do romaneio");
+      toast.error("Quantidade máxima atingida");
       return;
     }
 
@@ -147,7 +151,10 @@ export function useManifestScanning(manifestId: string) {
   };
 
   const handleComplete = () => {
-    if (!isComplete) return;
+    if (!isComplete) {
+      toast.error("Todos os produtos precisam ser escaneados antes de finalizar");
+      return;
+    }
     completeManifestMutation.mutate();
   };
 

@@ -9,7 +9,7 @@ export default function ManifestScanning() {
   const { 
     manifest, 
     isLoading, 
-    isComplete, 
+    isComplete,
     handleComplete,
     handleScanItem
   } = useManifestScanning(id!);
@@ -27,6 +27,8 @@ export default function ManifestScanning() {
       <ManifestHeader 
         clientName={manifest.client_name}
         driverName={manifest.driver_name}
+        vehiclePlate={manifest.vehicle_plate}
+        manifestNumber={manifest.number}
       />
 
       <ManifestItemsTable 

@@ -88,7 +88,7 @@ export function ManifestItemsTable({
                         }
                         onScanItem(item.id);
                       }}
-                      disabled={isItemComplete}
+                      disabled={isItemComplete || status === 'completed'}
                     >
                       Adicionar
                     </Button>

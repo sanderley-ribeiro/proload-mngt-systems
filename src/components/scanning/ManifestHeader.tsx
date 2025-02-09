@@ -7,16 +7,23 @@ import { useNavigate } from "react-router-dom";
 interface ManifestHeaderProps {
   clientName: string;
   driverName: string;
+  vehiclePlate: string;
+  manifestNumber: string;
 }
 
-export function ManifestHeader({ clientName, driverName }: ManifestHeaderProps) {
+export function ManifestHeader({ 
+  clientName, 
+  driverName,
+  vehiclePlate,
+  manifestNumber
+}: ManifestHeaderProps) {
   const navigate = useNavigate();
 
   return (
     <>
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">
-          Escaneamento de Romaneio
+          Escaneamento de Romaneio #{manifestNumber}
         </h1>
         <Button variant="outline" onClick={() => navigate("/loading")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -35,6 +42,9 @@ export function ManifestHeader({ clientName, driverName }: ManifestHeaderProps) 
             </p>
             <p>
               <strong>Motorista:</strong> {driverName}
+            </p>
+            <p>
+              <strong>Placa do Veículo:</strong> {vehiclePlate}
             </p>
           </div>
         </CardContent>
