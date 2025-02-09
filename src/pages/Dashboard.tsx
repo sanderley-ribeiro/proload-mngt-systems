@@ -154,7 +154,18 @@ const Dashboard = () => {
                         interval={0}
                       />
                       <YAxis />
-                      <Tooltip />
+                      <Tooltip content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="bg-white p-2 border border-gray-200 rounded shadow">
+                              <p className="font-medium">{payload[0].payload.product}</p>
+                              <p>Data: {payload[0].payload.date}</p>
+                              <p>Quantidade: {payload[0].value?.toLocaleString()}</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }} />
                       <Bar 
                         dataKey="total" 
                         fill="#22c55e" 
@@ -162,10 +173,31 @@ const Dashboard = () => {
                         barSize={40}
                       >
                         <LabelList 
-                          dataKey="total" 
-                          position="top" 
-                          fill="#374151"
-                          formatter={(value: number) => value.toLocaleString()}
+                          content={({ x, y, value, width, height }) => {
+                            const productName = productionData[x / width]?.product;
+                            return (
+                              <g>
+                                <text
+                                  x={x + width / 2}
+                                  y={y - 10}
+                                  fill="#374151"
+                                  textAnchor="middle"
+                                  fontSize={12}
+                                >
+                                  {value?.toLocaleString()}
+                                </text>
+                                <text
+                                  x={x + width / 2}
+                                  y={y + height + 15}
+                                  fill="#374151"
+                                  textAnchor="middle"
+                                  fontSize={10}
+                                >
+                                  {productName}
+                                </text>
+                              </g>
+                            );
+                          }}
                         />
                       </Bar>
                     </BarChart>
