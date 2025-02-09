@@ -1,6 +1,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface ManifestItem {
   id: string;
@@ -24,6 +26,8 @@ interface ManifestData {
 }
 
 export function useManifestData(manifestId: string) {
+  const navigate = useNavigate();
+
   return useQuery({
     queryKey: ["manifest", manifestId],
     queryFn: async () => {
@@ -38,9 +42,14 @@ export function useManifestData(manifestId: string) {
           status
         `)
         .eq("id", manifestId)
-        .single();
+        .maybeSingle();
 
       if (manifestError) throw manifestError;
+      if (!manifestData) {
+        toast.error("Romaneio não encontrado");
+        navigate("/loading");
+        throw new Error("Romaneio não encontrado");
+      }
 
       const { data: itemsData, error: itemsError } = await supabase
         .from("shipping_manifest_items")
