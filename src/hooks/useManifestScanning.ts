@@ -36,30 +36,44 @@ export function useManifestScanning(manifestId: string) {
     queryKey: ["manifest", manifestId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("shipping_manifests")
+        .from("manifest_items")
         .select(`
           id,
-          number,
-          client_name,
-          driver_name,
-          vehicle_plate,
-          status,
-          items:manifest_items(
+          product_id,
+          quantity,
+          scanned_at,
+          product:products(
+            name,
+            unit
+          ),
+          manifest:shipping_manifests(
             id,
-            product_id,
-            quantity,
-            scanned_at,
-            product:products(
-              name,
-              unit
-            )
+            number,
+            client_name,
+            driver_name,
+            vehicle_plate,
+            status
           )
         `)
-        .eq("id", manifestId)
-        .single();
+        .eq("manifest_id", manifestId);
 
       if (error) throw error;
-      return data as ManifestData;
+
+      if (!data || data.length === 0) {
+        throw new Error("Manifest not found");
+      }
+
+      const manifestData = data[0].manifest;
+      return {
+        ...manifestData,
+        items: data.map(item => ({
+          id: item.id,
+          product_id: item.product_id,
+          quantity: item.quantity,
+          scanned_at: item.scanned_at,
+          product: item.product
+        }))
+      } as ManifestData;
     },
   });
 
