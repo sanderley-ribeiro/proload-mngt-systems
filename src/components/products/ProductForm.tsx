@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 interface Product {
   id: string;
@@ -77,6 +77,15 @@ export default function ProductForm() {
     }
   };
 
+  const formatDate = (dateString: string) => {
+    try {
+      return format(parseISO(dateString), "dd/MM/yyyy HH:mm");
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return dateString;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -117,7 +126,7 @@ export default function ProductForm() {
                 <TableCell>{product.description}</TableCell>
                 <TableCell>{product.unit}</TableCell>
                 <TableCell>
-                  {format(new Date(product.created_at), "dd/MM/yyyy HH:mm")}
+                  {formatDate(product.created_at)}
                 </TableCell>
               </TableRow>
             ))}
