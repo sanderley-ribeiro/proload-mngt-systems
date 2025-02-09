@@ -79,9 +79,11 @@ export default function ManifestList() {
   };
 
   const formatProductList = (items: ShippingManifest["items"]) => {
-    return items
-      .map((item) => `${item.product.name} (${item.quantity})`)
-      .join(", ");
+    return items.map((item) => item.product.name).join(", ");
+  };
+
+  const getTotalQuantity = (items: ShippingManifest["items"]) => {
+    return items.reduce((total, item) => total + item.quantity, 0);
   };
 
   return (
@@ -94,6 +96,7 @@ export default function ManifestList() {
             <TableHead>Motorista</TableHead>
             <TableHead>Cliente</TableHead>
             <TableHead>Produtos</TableHead>
+            <TableHead>Quantidade Total</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="w-[100px]"></TableHead>
           </TableRow>
@@ -108,6 +111,7 @@ export default function ManifestList() {
               <TableCell>{manifest.driver_name}</TableCell>
               <TableCell>{manifest.client_name}</TableCell>
               <TableCell>{formatProductList(manifest.items)}</TableCell>
+              <TableCell>{getTotalQuantity(manifest.items)}</TableCell>
               <TableCell>
                 <Badge variant={getStatusColor(manifest.status)}>
                   {getStatusText(manifest.status)}
