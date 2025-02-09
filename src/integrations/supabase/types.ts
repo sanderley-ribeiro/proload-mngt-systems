@@ -184,30 +184,30 @@ export type Database = {
       }
       shipping_manifests: {
         Row: {
-          carrier: string
+          client_name: string
           created_at: string
           created_by: string
-          driver: string
+          driver_name: string
           id: string
           number: string
           status: string
           vehicle_plate: string
         }
         Insert: {
-          carrier: string
+          client_name: string
           created_at?: string
           created_by: string
-          driver: string
+          driver_name: string
           id?: string
           number: string
           status?: string
           vehicle_plate: string
         }
         Update: {
-          carrier?: string
+          client_name?: string
           created_at?: string
           created_by?: string
-          driver?: string
+          driver_name?: string
           id?: string
           number?: string
           status?: string
