@@ -31,6 +31,14 @@ export function useManifestData(manifestId: string) {
   return useQuery({
     queryKey: ["manifest", manifestId],
     queryFn: async () => {
+      // Validate manifest ID format before making the request
+      if (!manifestId || manifestId.length !== 36) {
+        console.error("Invalid manifest ID format:", manifestId);
+        toast.error("ID do romaneio inválido");
+        navigate("/loading");
+        throw new Error("ID do romaneio inválido");
+      }
+
       // First try to get manifest data
       const { data: manifestData, error: manifestError } = await supabase
         .from("shipping_manifests")
@@ -48,20 +56,14 @@ export function useManifestData(manifestId: string) {
       if (manifestError) {
         console.error("Erro ao buscar romaneio:", manifestError);
         toast.error("Erro ao buscar romaneio");
-        // Don't redirect if we're already on the loading page
-        if (!window.location.pathname.includes("/loading")) {
-          navigate("/loading");
-        }
+        navigate("/loading");
         throw manifestError;
       }
 
       if (!manifestData) {
         console.error("Romaneio não encontrado:", manifestId);
         toast.error("Romaneio não encontrado");
-        // Don't redirect if we're already on the loading page
-        if (!window.location.pathname.includes("/loading")) {
-          navigate("/loading");
-        }
+        navigate("/loading");
         throw new Error("Romaneio não encontrado");
       }
 
@@ -91,6 +93,10 @@ export function useManifestData(manifestId: string) {
         items: itemsData,
       } as ManifestData;
     },
+    // Add retry configuration to prevent excessive retries on 404/406
+    retry: false,
+    // Prevent refetching when the component remounts if we already have an error
+    retryOnMount: false,
   });
 }
 
