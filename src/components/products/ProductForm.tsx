@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { format, parseISO } from "date-fns";
+import { Pencil, Trash2 } from "lucide-react";
 
 interface Product {
   id: string;
@@ -95,6 +96,30 @@ export default function ProductForm() {
     }
   };
 
+  const handleDelete = async (productId: string) => {
+    try {
+      const { error } = await supabase
+        .from("products")
+        .delete()
+        .eq("id", productId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Produto excluído com sucesso!",
+      });
+
+      // Refresh the products list
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao excluir produto",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const formatDate = (dateString: string) => {
     try {
       return format(parseISO(dateString), "dd/MM/yyyy HH:mm");
@@ -135,6 +160,7 @@ export default function ProductForm() {
               <TableHead>Código de Barras</TableHead>
               <TableHead>Unidade</TableHead>
               <TableHead>Data de Cadastro</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -145,6 +171,29 @@ export default function ProductForm() {
                 <TableCell>{product.unit}</TableCell>
                 <TableCell>
                   {formatDate(product.created_at)}
+                </TableCell>
+                <TableCell className="text-right space-x-2">
+                  <Button
+                    onClick={() => {
+                      // TODO: Implement edit functionality
+                      toast({
+                        title: "Em breve",
+                        description: "Funcionalidade de edição será implementada em breve",
+                      });
+                    }}
+                    size="icon"
+                    variant="ghost"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    onClick={() => handleDelete(product.id)}
+                    size="icon"
+                    variant="ghost"
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
