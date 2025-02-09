@@ -15,7 +15,7 @@ export function useManifestComplete(manifestId: string) {
         .update({ status: "completed" })
         .eq("id", manifestId)
         .select()
-        .maybeSingle(); // Changed from .single() to .maybeSingle()
+        .maybeSingle(); // Alterado de .single() para .maybeSingle()
 
       if (error) throw error;
       if (!data) throw new Error("Romaneio não encontrado");
