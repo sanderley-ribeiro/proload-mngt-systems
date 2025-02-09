@@ -11,12 +11,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 interface ProductInfo {
+  name: string;
+  unit: string;
+}
+
+interface Product {
+  id: string;
   name: string;
   unit: string;
 }
@@ -38,17 +51,37 @@ export default function ProductReport() {
   const [endDate, setEndDate] = useState(
     format(new Date().setHours(23, 59, 59, 999), "yyyy-MM-dd'T'HH:mm")
   );
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [filter, setFilter] = useState({
     startDate,
-    endDate
+    endDate,
+    productId: selectedProductId
+  });
+
+  // Fetch products for the dropdown
+  const { data: products } = useQuery<Product[]>({
+    queryKey: ["products"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, unit")
+        .order("name");
+
+      if (error) {
+        toast.error("Erro ao carregar produtos");
+        throw error;
+      }
+      
+      return data;
+    },
   });
 
   const { data: movements, isLoading } = useQuery<Movement[]>({
-    queryKey: ["movements", filter.startDate, filter.endDate],
+    queryKey: ["movements", filter.startDate, filter.endDate, filter.productId],
     queryFn: async () => {
       console.log("Fetching movements with dates:", filter.startDate, filter.endDate);
       
-      const { data, error } = await supabase
+      let query = supabase
         .from("product_movements")
         .select(`
           id,
@@ -64,6 +97,13 @@ export default function ProductReport() {
         .gte("date", filter.startDate)
         .lte("date", filter.endDate)
         .order("date", { ascending: false });
+
+      // Add product filter if a product is selected
+      if (filter.productId) {
+        query = query.eq("product_id", filter.productId);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         toast.error("Erro ao carregar movimentações");
@@ -104,7 +144,8 @@ export default function ProductReport() {
     
     setFilter({
       startDate,
-      endDate
+      endDate,
+      productId: selectedProductId
     });
     
     toast.success("Filtro aplicado com sucesso");
@@ -112,7 +153,7 @@ export default function ProductReport() {
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <div className="grid gap-2">
           <Label htmlFor="start_date">Data Inicial</Label>
           <Input
@@ -131,6 +172,26 @@ export default function ProductReport() {
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
           />
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="product">Produto</Label>
+          <Select
+            value={selectedProductId}
+            onValueChange={setSelectedProductId}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Todos os produtos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Todos os produtos</SelectItem>
+              {products?.map((product) => (
+                <SelectItem key={product.id} value={product.id}>
+                  {product.name} ({product.unit})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

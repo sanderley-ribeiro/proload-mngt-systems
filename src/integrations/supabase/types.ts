@@ -9,6 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      manifest_items: {
+        Row: {
+          created_at: string
+          id: string
+          loaded_quantity: number
+          manifest_id: string
+          product_id: string
+          quantity: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          loaded_quantity?: number
+          manifest_id: string
+          product_id: string
+          quantity: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          loaded_quantity?: number
+          manifest_id?: string
+          product_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manifest_items_manifest_id_fkey"
+            columns: ["manifest_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_manifests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manifest_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_movements: {
         Row: {
           created_at: string
@@ -132,13 +174,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "shipping_manifest_items_manifest_id_fkey"
-            columns: ["manifest_id"]
-            isOneToOne: false
-            referencedRelation: "shipping_manifests"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "shipping_manifest_items_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -149,25 +184,34 @@ export type Database = {
       }
       shipping_manifests: {
         Row: {
-          client_name: string
+          carrier: string
           created_at: string
           created_by: string
-          driver_name: string
+          driver: string
           id: string
+          number: string
+          status: string
+          vehicle_plate: string
         }
         Insert: {
-          client_name: string
+          carrier: string
           created_at?: string
           created_by: string
-          driver_name: string
+          driver: string
           id?: string
+          number: string
+          status?: string
+          vehicle_plate: string
         }
         Update: {
-          client_name?: string
+          carrier?: string
           created_at?: string
           created_by?: string
-          driver_name?: string
+          driver?: string
           id?: string
+          number?: string
+          status?: string
+          vehicle_plate?: string
         }
         Relationships: [
           {
