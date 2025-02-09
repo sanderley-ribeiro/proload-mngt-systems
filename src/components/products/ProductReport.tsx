@@ -38,7 +38,7 @@ export default function ProductReport() {
     format(new Date().setHours(23, 59, 59, 999), "yyyy-MM-dd'T'HH:mm")
   );
 
-  const { data: movements } = useQuery<Movement[]>({
+  const { data: movements, refetch } = useQuery<Movement[]>({
     queryKey: ["movements", startDate, endDate],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -109,6 +109,13 @@ export default function ProductReport() {
           />
         </div>
       </div>
+
+      <Button 
+        onClick={() => refetch()}
+        className="w-full md:w-auto"
+      >
+        Filtrar Movimentações
+      </Button>
 
       <div className="rounded-md border">
         <Table>
