@@ -161,8 +161,10 @@ export default function ManifestList() {
     (manifest) => getTotalQuantity(manifest.items) === 0 && manifest.status === 'em aberto'
   );
 
-  // Filter out manifests with zero quantity from the display
-  const displayManifests = manifests?.filter(manifest => getTotalQuantity(manifest.items) > 0);
+  // Filter out manifests with zero quantity and finalized status from the display
+  const displayManifests = manifests?.filter(manifest => 
+    getTotalQuantity(manifest.items) > 0 && manifest.status !== 'finalizado'
+  );
 
   return (
     <div className="space-y-4">
