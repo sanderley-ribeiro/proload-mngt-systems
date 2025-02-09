@@ -45,11 +45,11 @@ export default function ManifestList() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
-        return "success";
+        return "default";
       case "pending":
-        return "warning";
-      default:
         return "secondary";
+      default:
+        return "outline";
     }
   };
 
