@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,8 +62,8 @@ export default function ProductMovement() {
     },
   });
 
-  const { data: recentMovements, isError: isMovementsError, error: movementsError } = useQuery({
-    queryKey: ["recent-movements"],
+  const { data: movements, isError: isMovementsError, error: movementsError } = useQuery({
+    queryKey: ["movements"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("product_movements")
@@ -77,8 +78,7 @@ export default function ProductMovement() {
             unit
           )
         `)
-        .order('date', { ascending: false })
-        .limit(5);
+        .order('date', { ascending: false });
 
       if (error) throw error;
       return data as Movement[];
@@ -116,7 +116,7 @@ export default function ProductMovement() {
         },
         () => {
           // Invalidate and refetch when new movement is added
-          queryClient.invalidateQueries({ queryKey: ["recent-movements"] });
+          queryClient.invalidateQueries({ queryKey: ["movements"] });
         }
       )
       .subscribe();
@@ -239,7 +239,7 @@ export default function ProductMovement() {
       </form>
 
       <div className="space-y-4">
-        <h3 className="text-lg font-medium">Últimas Movimentações</h3>
+        <h3 className="text-lg font-medium">Todas as Movimentações</h3>
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -252,7 +252,7 @@ export default function ProductMovement() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recentMovements?.map((movement) => (
+              {movements?.map((movement) => (
                 <TableRow key={movement.id}>
                   <TableCell>
                     {format(new Date(movement.date), "dd/MM/yyyy HH:mm")}
