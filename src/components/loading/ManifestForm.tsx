@@ -88,6 +88,7 @@ export default function ManifestForm() {
       setItems([]);
       
     } catch (error: any) {
+      console.error("Erro ao criar romaneio:", error);
       toast({
         title: "Erro ao criar romaneio",
         description: error.message,
