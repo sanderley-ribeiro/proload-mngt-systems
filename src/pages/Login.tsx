@@ -86,8 +86,8 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-lg px-4 py-8">
+    <div className="h-screen w-screen flex items-center justify-center bg-background">
+      <div className="w-full max-w-md px-4">
         <Card className="w-full">
           <CardHeader className="space-y-2 text-center">
             <CardTitle className="text-3xl font-bold">Sistema de Gerenciamento</CardTitle>
