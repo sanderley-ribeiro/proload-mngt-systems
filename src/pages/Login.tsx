@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { Input } from "@/components/ui/input";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -74,27 +75,25 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Sistema de Gerenciamento</CardTitle>
-          <CardDescription>Entre com sua conta ou cadastre-se</CardDescription>
+          <CardTitle className="text-2xl md:text-3xl">Sistema de Gerenciamento</CardTitle>
+          <CardDescription className="text-sm md:text-base">Entre com sua conta ou cadastre-se</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
-              <input
+              <Input
                 type="email"
                 name="email"
                 placeholder="E-mail"
                 required
                 disabled={isLoading}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
-              <input
+              <Input
                 type="password"
                 name="password"
                 placeholder="Senha"
                 required
                 disabled={isLoading}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
@@ -115,21 +114,19 @@ const Login = () => {
 
           <form onSubmit={handleSignUp} className="space-y-4">
             <div className="space-y-2">
-              <input
+              <Input
                 type="email"
                 name="email"
                 placeholder="E-mail"
                 required
                 disabled={isLoading}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
-              <input
+              <Input
                 type="password"
                 name="password"
                 placeholder="Senha"
                 required
                 disabled={isLoading}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
