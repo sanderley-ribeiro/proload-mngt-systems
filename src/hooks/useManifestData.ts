@@ -43,7 +43,9 @@ export function useManifestData(manifestId: string) {
         // First try to get manifest data with explicit select
         const { data: manifestData, error: manifestError } = await supabase
           .from("shipping_manifests")
-          .select("id, number, client_name, driver_name, vehicle_plate, status")
+          .select(
+            "id, number, client_name, driver_name, vehicle_plate, status"
+          )
           .eq("id", manifestId)
           .maybeSingle();
 
