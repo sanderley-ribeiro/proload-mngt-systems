@@ -9,6 +9,81 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      product_movements: {
+        Row: {
+          created_at: string
+          created_by: string
+          date: string
+          id: string
+          notes: string | null
+          product_id: string
+          quantity: number
+          type: Database["public"]["Enums"]["movement_type"]
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          date?: string
+          id?: string
+          notes?: string | null
+          product_id: string
+          quantity: number
+          type: Database["public"]["Enums"]["movement_type"]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          product_id?: string
+          quantity?: number
+          type?: Database["public"]["Enums"]["movement_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_movements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -68,6 +143,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "operator"
+      movement_type: "input" | "output"
     }
     CompositeTypes: {
       [_ in never]: never
