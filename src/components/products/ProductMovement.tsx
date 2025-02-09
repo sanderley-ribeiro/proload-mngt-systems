@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -178,59 +177,63 @@ export default function ProductMovement() {
   return (
     <div className="space-y-8">
       <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid gap-2">
-          <Label htmlFor="product_id">Produto</Label>
-          <Select name="product_id" required>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um produto" />
-            </SelectTrigger>
-            <SelectContent>
-              {products?.map((product) => (
-                <SelectItem key={product.id} value={product.id}>
-                  {product.name} ({product.unit})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="product_id">Produto</Label>
+            <Select name="product_id" required>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um produto" />
+              </SelectTrigger>
+              <SelectContent>
+                {products?.map((product) => (
+                  <SelectItem key={product.id} value={product.id}>
+                    {product.name} ({product.unit})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="grid gap-2">
-          <Label>Tipo de Movimento</Label>
-          <div className="flex gap-4">
-            <Button
-              type="button"
-              variant={movementType === "input" ? "default" : "outline"}
-              onClick={() => setMovementType("input")}
-            >
-              Entrada
-            </Button>
-            <Button
-              type="button"
-              variant={movementType === "output" ? "default" : "outline"}
-              onClick={() => setMovementType("output")}
-            >
-              Saída
-            </Button>
+          <div className="space-y-2">
+            <Label>Tipo de Movimento</Label>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={movementType === "input" ? "default" : "outline"}
+                onClick={() => setMovementType("input")}
+                className="flex-1"
+              >
+                Entrada
+              </Button>
+              <Button
+                type="button"
+                variant={movementType === "output" ? "default" : "outline"}
+                onClick={() => setMovementType("output")}
+                className="flex-1"
+              >
+                Saída
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="quantity">Quantidade</Label>
+            <Input
+              id="quantity"
+              name="quantity"
+              type="number"
+              step="0.01"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes">Observações</Label>
+            <Input id="notes" name="notes" />
           </div>
         </div>
 
-        <div className="grid gap-2">
-          <Label htmlFor="quantity">Quantidade</Label>
-          <Input
-            id="quantity"
-            name="quantity"
-            type="number"
-            step="0.01"
-            required
-          />
-        </div>
-
-        <div className="grid gap-2">
-          <Label htmlFor="notes">Observações</Label>
-          <Textarea id="notes" name="notes" />
-        </div>
-
-        <Button type="submit" disabled={isLoading}>
+        <Button type="submit" disabled={isLoading} className="w-full">
           {isLoading ? "Registrando..." : "Registrar Movimento"}
         </Button>
       </form>
