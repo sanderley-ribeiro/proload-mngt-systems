@@ -10,9 +10,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FileText } from "lucide-react";
+import { FileText, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 interface ShippingManifest {
   id: string;
@@ -31,7 +32,7 @@ interface ShippingManifest {
 
 export default function ManifestList() {
   const navigate = useNavigate();
-  const { data: manifests, isLoading } = useQuery({
+  const { data: manifests, isLoading, refetch } = useQuery({
     queryKey: ["manifests"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -51,6 +52,37 @@ export default function ManifestList() {
       return data as ShippingManifest[];
     },
   });
+
+  const handleDelete = async (manifestId: string, status: string) => {
+    if (status !== 'em aberto') {
+      toast.error("Apenas romaneios em aberto podem ser excluídos");
+      return;
+    }
+
+    try {
+      // First delete the manifest items
+      const { error: itemsError } = await supabase
+        .from("shipping_manifest_items")
+        .delete()
+        .eq("manifest_id", manifestId);
+
+      if (itemsError) throw itemsError;
+
+      // Then delete the manifest
+      const { error: manifestError } = await supabase
+        .from("shipping_manifests")
+        .delete()
+        .eq("id", manifestId);
+
+      if (manifestError) throw manifestError;
+
+      toast.success("Romaneio excluído com sucesso");
+      refetch(); // Refresh the list
+    } catch (error) {
+      console.error("Error deleting manifest:", error);
+      toast.error("Erro ao excluir romaneio");
+    }
+  };
 
   if (isLoading) {
     return <div>Carregando...</div>;
@@ -98,7 +130,7 @@ export default function ManifestList() {
             <TableHead>Produtos</TableHead>
             <TableHead>Quantidade Total</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="w-[100px]"></TableHead>
+            <TableHead className="w-[100px]">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -117,15 +149,24 @@ export default function ManifestList() {
                   {getStatusText(manifest.status)}
                 </Badge>
               </TableCell>
-              <TableCell>
+              <TableCell className="flex gap-2">
                 {manifest.status === "em aberto" && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => navigate(`/loading/${manifest.id}/scan`)}
-                  >
-                    <FileText className="h-4 w-4" />
-                  </Button>
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => navigate(`/loading/${manifest.id}/scan`)}
+                    >
+                      <FileText className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(manifest.id, manifest.status)}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </>
                 )}
               </TableCell>
             </TableRow>
