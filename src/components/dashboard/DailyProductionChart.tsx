@@ -24,7 +24,8 @@ export const DailyProductionChart = () => {
           product:products(name)
         `)
         .order('production_date', { ascending: false })
-        .limit(2);
+        .gte('production_date', new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString())
+        .order('production_date', { ascending: true });
 
       if (error) throw error;
 
