@@ -15,7 +15,10 @@ export function useManifestItemScan(manifestId: string) {
         .eq("id", itemId)
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating item:", error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
@@ -37,6 +40,7 @@ export function useManifestItemScan(manifestId: string) {
     }
 
     const newScans = [...currentScans, new Date().toISOString()];
+    console.log("Atualizando scans para:", newScans); // Log para debug
 
     queryClient.setQueryData(["manifest", manifestId], (oldData: ManifestData | undefined) => {
       if (!oldData) return oldData;
