@@ -50,13 +50,12 @@ export default function ProductForm() {
     const productName = formData.get("name") as string;
 
     // Check if a product with the same name already exists
-    const { data: existingProduct } = await supabase
+    const { data: existingProducts } = await supabase
       .from("products")
       .select("name")
-      .eq("name", productName)
-      .single();
+      .eq("name", productName);
 
-    if (existingProduct) {
+    if (existingProducts && existingProducts.length > 0) {
       toast({
         title: "Erro ao cadastrar produto",
         description: "Já existe um produto cadastrado com este nome",
