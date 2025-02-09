@@ -58,9 +58,9 @@ export default function ManifestList() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "completed":
+      case "finalizado":
         return "default";
-      case "pending":
+      case "em aberto":
         return "secondary";
       default:
         return "outline";
@@ -69,9 +69,9 @@ export default function ManifestList() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "completed":
+      case "finalizado":
         return "Finalizado";
-      case "pending":
+      case "em aberto":
         return "Em Aberto";
       default:
         return status;
@@ -118,7 +118,7 @@ export default function ManifestList() {
                 </Badge>
               </TableCell>
               <TableCell>
-                {manifest.status === "pending" && (
+                {manifest.status === "em aberto" && (
                   <Button
                     variant="ghost"
                     size="icon"
