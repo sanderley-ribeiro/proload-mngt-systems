@@ -161,9 +161,9 @@ export default function ManifestList() {
     (manifest) => getTotalQuantity(manifest.items) === 0 && manifest.status === 'em aberto'
   );
 
-  // Filter out manifests with zero quantity and finalized status from the display
+  // Show all manifests, including finalized ones
   const displayManifests = manifests?.filter(manifest => 
-    getTotalQuantity(manifest.items) > 0 && manifest.status !== 'finalizado'
+    getTotalQuantity(manifest.items) > 0
   );
 
   return (
