@@ -161,6 +161,9 @@ export default function ManifestList() {
     (manifest) => getTotalQuantity(manifest.items) === 0 && manifest.status === 'em aberto'
   );
 
+  // Filter out manifests with zero quantity from the display
+  const displayManifests = manifests?.filter(manifest => getTotalQuantity(manifest.items) > 0);
+
   return (
     <div className="space-y-4">
       {hasEmptyManifests && (
@@ -187,7 +190,7 @@ export default function ManifestList() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {manifests?.map((manifest) => (
+          {displayManifests?.map((manifest) => (
             <TableRow key={manifest.id}>
               <TableCell>{manifest.number}</TableCell>
               <TableCell>
