@@ -84,6 +84,45 @@ export default function ManifestList() {
     }
   };
 
+  const handleDeleteEmptyManifests = async () => {
+    if (!manifests) return;
+
+    const emptyManifests = manifests.filter(
+      (manifest) => getTotalQuantity(manifest.items) === 0 && manifest.status === 'em aberto'
+    );
+
+    if (emptyManifests.length === 0) {
+      toast.info("Não há romaneios vazios para excluir");
+      return;
+    }
+
+    try {
+      for (const manifest of emptyManifests) {
+        // Delete manifest items first
+        const { error: itemsError } = await supabase
+          .from("shipping_manifest_items")
+          .delete()
+          .eq("manifest_id", manifest.id);
+
+        if (itemsError) throw itemsError;
+
+        // Then delete the manifest
+        const { error: manifestError } = await supabase
+          .from("shipping_manifests")
+          .delete()
+          .eq("id", manifest.id);
+
+        if (manifestError) throw manifestError;
+      }
+
+      toast.success(`${emptyManifests.length} romaneio(s) vazio(s) excluído(s) com sucesso`);
+      refetch();
+    } catch (error) {
+      console.error("Error deleting empty manifests:", error);
+      toast.error("Erro ao excluir romaneios vazios");
+    }
+  };
+
   if (isLoading) {
     return <div>Carregando...</div>;
   }
@@ -118,8 +157,22 @@ export default function ManifestList() {
     return items.reduce((total, item) => total + item.quantity, 0);
   };
 
+  const hasEmptyManifests = manifests?.some(
+    (manifest) => getTotalQuantity(manifest.items) === 0 && manifest.status === 'em aberto'
+  );
+
   return (
-    <div>
+    <div className="space-y-4">
+      {hasEmptyManifests && (
+        <div className="flex justify-end">
+          <Button 
+            variant="destructive" 
+            onClick={handleDeleteEmptyManifests}
+          >
+            Excluir Romaneios Vazios
+          </Button>
+        </div>
+      )}
       <Table>
         <TableHeader>
           <TableRow>
