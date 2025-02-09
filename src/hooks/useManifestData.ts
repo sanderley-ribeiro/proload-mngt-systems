@@ -39,66 +39,70 @@ export function useManifestData(manifestId: string) {
         throw new Error("ID do romaneio inválido");
       }
 
-      // First try to get manifest data
-      const { data: manifestData, error: manifestError } = await supabase
-        .from("shipping_manifests")
-        .select(`
-          id,
-          number,
-          client_name,
-          driver_name,
-          vehicle_plate,
-          status
-        `)
-        .eq("id", manifestId)
-        .maybeSingle();
+      try {
+        // First try to get manifest data
+        const { data: manifestData, error: manifestError } = await supabase
+          .from("shipping_manifests")
+          .select(`
+            id,
+            number,
+            client_name,
+            driver_name,
+            vehicle_plate,
+            status
+          `)
+          .eq("id", manifestId)
+          .maybeSingle();
 
-      if (manifestError) {
-        console.error("Erro ao buscar romaneio:", manifestError);
-        toast.error("Erro ao buscar romaneio");
+        if (manifestError) {
+          console.error("Erro ao buscar romaneio:", manifestError);
+          toast.error("Erro ao buscar romaneio");
+          navigate("/loading");
+          throw manifestError;
+        }
+
+        if (!manifestData) {
+          console.error("Romaneio não encontrado:", manifestId);
+          toast.error("Romaneio não encontrado");
+          navigate("/loading");
+          throw new Error("Romaneio não encontrado");
+        }
+
+        // If manifest exists, get its items
+        const { data: itemsData, error: itemsError } = await supabase
+          .from("shipping_manifest_items")
+          .select(`
+            id,
+            product_id,
+            quantity,
+            scanned_at,
+            product:products(
+              name,
+              unit
+            )
+          `)
+          .eq("manifest_id", manifestId);
+
+        if (itemsError) {
+          console.error("Erro ao buscar itens do romaneio:", itemsError);
+          toast.error("Erro ao buscar itens do romaneio");
+          throw itemsError;
+        }
+
+        return {
+          ...manifestData,
+          items: itemsData || [],
+        } as ManifestData;
+      } catch (error) {
+        console.error("Erro ao processar requisição:", error);
+        toast.error("Erro ao buscar dados do romaneio");
         navigate("/loading");
-        throw manifestError;
+        throw error;
       }
-
-      if (!manifestData) {
-        console.error("Romaneio não encontrado:", manifestId);
-        toast.error("Romaneio não encontrado");
-        navigate("/loading");
-        throw new Error("Romaneio não encontrado");
-      }
-
-      // If manifest exists, get its items
-      const { data: itemsData, error: itemsError } = await supabase
-        .from("shipping_manifest_items")
-        .select(`
-          id,
-          product_id,
-          quantity,
-          scanned_at,
-          product:products(
-            name,
-            unit
-          )
-        `)
-        .eq("manifest_id", manifestId);
-
-      if (itemsError) {
-        console.error("Erro ao buscar itens do romaneio:", itemsError);
-        toast.error("Erro ao buscar itens do romaneio");
-        throw itemsError;
-      }
-
-      return {
-        ...manifestData,
-        items: itemsData,
-      } as ManifestData;
     },
-    // Add retry configuration to prevent excessive retries on 404/406
     retry: false,
-    // Prevent refetching when the component remounts if we already have an error
     retryOnMount: false,
   });
 }
 
 export type { ManifestData, ManifestItem };
-
