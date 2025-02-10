@@ -17,6 +17,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ManifestScanning from "./pages/ManifestScanning";
 import { StrictMode } from "react";
+import { ThemeProvider } from "next-themes";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -31,35 +32,37 @@ const queryClient = new QueryClient({
 const App = () => (
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <SidebarProvider>
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route
-                  path="/"
-                  element={
-                    <ProtectedRoute>
-                      <AppLayout />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route index element={<Dashboard />} />
-                  <Route path="products" element={<Products />} />
-                  <Route path="production" element={<Production />} />
-                  <Route path="loading" element={<Loading />} />
-                  <Route path="loading/:id/scan" element={<ManifestScanning />} />
-                  <Route path="report" element={<Report />} />
-                  <Route path="*" element={<NotFound />} />
-                </Route>
-              </Routes>
-            </SidebarProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthProvider>
+              <SidebarProvider>
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route
+                    path="/"
+                    element={
+                      <ProtectedRoute>
+                        <AppLayout />
+                      </ProtectedRoute>
+                    }
+                  >
+                    <Route index element={<Dashboard />} />
+                    <Route path="products" element={<Products />} />
+                    <Route path="production" element={<Production />} />
+                    <Route path="loading" element={<Loading />} />
+                    <Route path="loading/:id/scan" element={<ManifestScanning />} />
+                    <Route path="report" element={<Report />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Route>
+                </Routes>
+              </SidebarProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   </StrictMode>
 );
