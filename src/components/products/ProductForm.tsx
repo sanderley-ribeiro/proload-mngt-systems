@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { format, parseISO } from "date-fns";
 import { Pencil, Trash2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Product {
   id: string;
@@ -29,8 +30,9 @@ export default function ProductForm() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { session } = useAuth();
 
-  const { data: products } = useQuery<Product[]>({
+  const { data: products, isError } = useQuery<Product[]>({
     queryKey: ["products"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -41,10 +43,21 @@ export default function ProductForm() {
       if (error) throw error;
       return data;
     },
+    enabled: true, // Always enabled since we now allow public access to products
   });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (!session) {
+      toast({
+        title: "Erro ao cadastrar produto",
+        description: "Você precisa estar autenticado para realizar esta ação",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
@@ -95,6 +108,15 @@ export default function ProductForm() {
   };
 
   const handleDelete = async (productId: string) => {
+    if (!session) {
+      toast({
+        title: "Erro ao excluir produto",
+        description: "Você precisa estar autenticado para realizar esta ação",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { data: manifestItems, error: checkError } = await supabase
         .from("shipping_manifest_items")
@@ -142,6 +164,14 @@ export default function ProductForm() {
       return dateString;
     }
   };
+
+  if (isError) {
+    return (
+      <div className="text-center p-4 text-red-500">
+        Erro ao carregar produtos. Por favor, tente novamente.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
