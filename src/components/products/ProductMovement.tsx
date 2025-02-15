@@ -35,10 +35,10 @@ interface Movement {
   quantity: number;
   date: string;
   notes: string;
-  products: {
-    name: string;
-    unit: string;
-  };
+  product_name: string;
+  product_unit: string;
+  floor: string | null;
+  position_number: number | null;
 }
 
 export default function ProductMovement() {
@@ -65,18 +65,8 @@ export default function ProductMovement() {
     queryKey: ["movements"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("product_movements")
-        .select(`
-          id,
-          type,
-          quantity,
-          date,
-          notes,
-          products (
-            name,
-            unit
-          )
-        `)
+        .from("combined_movements_view")
+        .select("*")
         .order('date', { ascending: false });
 
       if (error) throw error;
@@ -252,6 +242,7 @@ export default function ProductMovement() {
                 <TableHead>Produto</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead>Quantidade</TableHead>
+                <TableHead>Posição</TableHead>
                 <TableHead>Observações</TableHead>
               </TableRow>
             </TableHeader>
@@ -262,12 +253,17 @@ export default function ProductMovement() {
                     {format(new Date(movement.date), "dd/MM/yyyy HH:mm")}
                   </TableCell>
                   <TableCell>
-                    {movement.products.name} ({movement.products.unit})
+                    {movement.product_name} ({movement.product_unit})
                   </TableCell>
                   <TableCell>
                     {movement.type === "input" ? "Entrada" : "Saída"}
                   </TableCell>
                   <TableCell>{movement.quantity}</TableCell>
+                  <TableCell>
+                    {movement.floor && movement.position_number 
+                      ? `${movement.floor}-${movement.position_number}`
+                      : "N/A"}
+                  </TableCell>
                   <TableCell>{movement.notes}</TableCell>
                 </TableRow>
               ))}
