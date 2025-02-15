@@ -10,20 +10,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-type Position = {
-  id: string;
-  floor: string;
-  position_number: number;
-  occupation?: {
-    product_name: string;
-    quantity: number;
-    entry_date: string;
-  };
-};
-
 export function WarehouseMap() {
   const { data: positions, isLoading } = useQuery({
-    queryKey: ["warehouse-positions"],
+    queryKey: ["warehouse-occupation-report"],
     queryFn: async () => {
       const { data: positions, error } = await supabase
         .from("warehouse_occupation_report")
@@ -40,7 +29,7 @@ export function WarehouseMap() {
   }
 
   const floors = ["A", "B", "C"];
-  const itemsPerRow = 25; // 20 colunas para melhor visualização
+  const itemsPerRow = 25;
 
   return (
     <div className="space-y-8">

@@ -12,7 +12,7 @@ import {
 
 export function StockMovements() {
   const { data: movements, isLoading } = useQuery({
-    queryKey: ["warehouse-movements"],
+    queryKey: ["warehouse-occupation-report"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("warehouse_occupation_report")

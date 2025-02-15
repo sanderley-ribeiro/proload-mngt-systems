@@ -61,9 +61,11 @@ export function AddStockItem() {
       toast.success("Produto adicionado ao estoque com sucesso!");
       setProductId("");
       setQuantity("");
+      // Invalidar todas as queries relacionadas ao estoque
       queryClient.invalidateQueries({ queryKey: ["warehouse-positions"] });
       queryClient.invalidateQueries({ queryKey: ["warehouse-products"] });
       queryClient.invalidateQueries({ queryKey: ["warehouse-movements"] });
+      queryClient.invalidateQueries({ queryKey: ["warehouse-occupation-report"] });
     },
     onError: (error) => {
       toast.error("Erro ao adicionar produto ao estoque");

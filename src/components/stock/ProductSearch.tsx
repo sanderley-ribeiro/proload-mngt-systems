@@ -16,7 +16,7 @@ export function ProductSearch() {
   const [search, setSearch] = useState("");
 
   const { data: products, isLoading } = useQuery({
-    queryKey: ["warehouse-products", search],
+    queryKey: ["warehouse-occupation-report", search],
     queryFn: async () => {
       const query = supabase
         .from("warehouse_occupation_report")
