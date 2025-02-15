@@ -1,9 +1,9 @@
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { format, parseISO } from "date-fns";
 import { Pencil, Trash2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Product {
   id: string;
@@ -27,8 +28,8 @@ interface Product {
 
 export default function ProductForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth(); // Adicionando o contexto de autenticação
 
   const { data: products, isError } = useQuery<Product[]>({
     queryKey: ["products"],
@@ -45,6 +46,16 @@ export default function ProductForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Erro ao cadastrar produto",
+        description: "Você precisa estar autenticado para cadastrar produtos",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
@@ -95,6 +106,15 @@ export default function ProductForm() {
   };
 
   const handleDelete = async (productId: string) => {
+    if (!user) {
+      toast({
+        title: "Erro ao excluir produto",
+        description: "Você precisa estar autenticado para excluir produtos",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { data: manifestItems, error: checkError } = await supabase
         .from("shipping_manifest_items")
