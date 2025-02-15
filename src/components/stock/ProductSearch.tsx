@@ -11,11 +11,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { WarehouseOccupation } from "@/types/warehouse";
 
 export function ProductSearch() {
   const [search, setSearch] = useState("");
 
-  const { data: products, isLoading } = useQuery({
+  const { data: products, isLoading } = useQuery<WarehouseOccupation[]>({
     queryKey: ["warehouse-occupation-report", search],
     queryFn: async () => {
       const query = supabase

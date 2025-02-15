@@ -9,9 +9,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { WarehouseOccupation } from "@/types/warehouse";
 
 export function StockMovements() {
-  const { data: movements, isLoading } = useQuery({
+  const { data: movements, isLoading } = useQuery<WarehouseOccupation[]>({
     queryKey: ["warehouse-occupation-report"],
     queryFn: async () => {
       const { data, error } = await supabase

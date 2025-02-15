@@ -9,9 +9,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { WarehouseOccupation } from "@/types/warehouse";
 
 export function WarehouseMap() {
-  const { data: positions, isLoading } = useQuery({
+  const { data: positions, isLoading } = useQuery<WarehouseOccupation[]>({
     queryKey: ["warehouse-occupation-report"],
     queryFn: async () => {
       const { data: positions, error } = await supabase
@@ -28,7 +29,7 @@ export function WarehouseMap() {
     return <div>Carregando mapa do armazém...</div>;
   }
 
-  const floors = ["A", "B", "C"];
+  const floors = ["A", "B", "C"] as const;
   const itemsPerRow = 25;
 
   return (
@@ -44,10 +45,10 @@ export function WarehouseMap() {
                   : floor === "B" 
                     ? index + 501 
                     : index + 1001;
-                const position = positions?.find(p => p.position_number === positionNumber);
+                const position = positions?.find(p => p.position_number === positionNumber && p.floor === floor);
                 
                 return (
-                  <TooltipProvider key={positionNumber}>
+                  <TooltipProvider key={`${floor}-${positionNumber}`}>
                     <Tooltip>
                       <TooltipTrigger>
                         <div

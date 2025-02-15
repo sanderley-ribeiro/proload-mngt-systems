@@ -46,7 +46,7 @@ interface Movement {
   movement_type: "input" | "output";
   quantity: number;
   movement_date: string;
-  notes: string;
+  notes: string | null;
   product_name: string;
   product_unit: string;
   floor: string | null;
@@ -74,7 +74,7 @@ export default function ProductMovement() {
     },
   });
 
-  const { data: movements, isError: isMovementsError, error: movementsError } = useQuery({
+  const { data: movements, isError: isMovementsError, error: movementsError } = useQuery<Movement[]>({
     queryKey: ["movements"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -83,7 +83,7 @@ export default function ProductMovement() {
         .order('movement_date', { ascending: false });
 
       if (error) throw error;
-      return data as Movement[];
+      return data;
     },
   });
 
