@@ -12,11 +12,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function AddStockItem() {
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState("");
   const queryClient = useQueryClient();
+  const { session } = useAuth();
 
   const { data: products } = useQuery({
     queryKey: ["products"],
@@ -33,6 +35,10 @@ export function AddStockItem() {
 
   const { mutate: addItem, isPending } = useMutation({
     mutationFn: async () => {
+      if (!session?.user?.id) {
+        throw new Error("Usuário não autenticado");
+      }
+
       // Primeiro, encontrar a melhor posição usando a função do banco
       const { data: positionId, error: positionError } = await supabase
         .rpc("find_best_position", { product_id: productId });
@@ -46,6 +52,7 @@ export function AddStockItem() {
           position_id: positionId,
           product_id: productId,
           quantity: parseInt(quantity),
+          created_by: session.user.id
         });
 
       if (occupationError) throw occupationError;
@@ -103,3 +110,4 @@ export function AddStockItem() {
     </div>
   );
 }
+
