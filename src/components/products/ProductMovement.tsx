@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,7 +87,6 @@ export default function ProductMovement() {
     },
   });
 
-  // Handle errors
   useEffect(() => {
     if (isProductsError) {
       useToastNotify({
@@ -106,7 +104,6 @@ export default function ProductMovement() {
     }
   }, [isProductsError, isMovementsError, productsError, movementsError, useToastNotify]);
 
-  // Subscribe to real-time changes
   useEffect(() => {
     const channel = supabase
       .channel('schema-db-changes')
@@ -118,7 +115,6 @@ export default function ProductMovement() {
           table: 'product_movements'
         },
         () => {
-          // Invalidate and refetch when new movement is added
           queryClient.invalidateQueries({ queryKey: ["movements"] });
         }
       )
@@ -157,7 +153,6 @@ export default function ProductMovement() {
       formRef.current?.reset();
       setMovementType("input"); // Reset movement type to default
       
-      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["movements"] });
       queryClient.invalidateQueries({ queryKey: ["warehouse-occupation-report"] });
     } catch (error: any) {
@@ -170,19 +165,13 @@ export default function ProductMovement() {
 
   const handleDelete = async (movementId: string) => {
     try {
-      // Remove o prefixo "pm_" se existir
+      if (!movementId.startsWith('pm_')) {
+        toast.error("Não é possível excluir este tipo de movimento");
+        return;
+      }
+
       const cleanId = movementId.replace('pm_', '');
       
-      // Busca o movimento primeiro para garantir que existe
-      const { data: movement, error: fetchError } = await supabase
-        .from("all_stock_movements_view")
-        .select("id")
-        .eq("id", movementId)
-        .maybeSingle();
-
-      if (fetchError) throw fetchError;
-      if (!movement) throw new Error("Movimento não encontrado");
-
       const { error } = await supabase
         .from("product_movements")
         .delete()
@@ -308,33 +297,35 @@ export default function ProductMovement() {
                   <TableCell>{movement.notes}</TableCell>
                   <TableCell>{movement.created_by_name || "N/A"}</TableCell>
                   <TableCell>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Tem certeza que deseja excluir esta movimentação? Esta ação não pode ser desfeita.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDelete(movement.id)}
-                            className="bg-red-500 hover:bg-red-600"
+                    {movement.id?.startsWith('pm_') ? (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                           >
-                            Excluir
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tem certeza que deseja excluir esta movimentação? Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(movement.id!)}
+                              className="bg-red-500 hover:bg-red-600"
+                            >
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    ) : null}
                   </TableCell>
                 </TableRow>
               ))}
@@ -345,4 +336,3 @@ export default function ProductMovement() {
     </div>
   );
 }
-
