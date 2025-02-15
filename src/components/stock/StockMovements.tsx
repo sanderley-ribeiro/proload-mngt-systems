@@ -53,9 +53,9 @@ export function StockMovements() {
               </TableCell>
               <TableCell>{movement.stored_by}</TableCell>
             </TableRow>
-          </TableBody>
-        </Table>
-      </div>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }
