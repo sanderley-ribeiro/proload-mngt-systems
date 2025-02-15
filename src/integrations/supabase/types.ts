@@ -52,13 +52,6 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "manifest_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "warehouse_occupation_report"
-            referencedColumns: ["product_id"]
-          },
         ]
       }
       product_movements: {
@@ -106,13 +99,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_movements_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "warehouse_occupation_report"
-            referencedColumns: ["product_id"]
           },
         ]
       }
@@ -206,13 +192,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "shipping_manifest_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "warehouse_occupation_report"
-            referencedColumns: ["product_id"]
           },
         ]
       }
@@ -328,13 +307,6 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "warehouse_occupations_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "warehouse_occupation_report"
-            referencedColumns: ["product_id"]
-          },
         ]
       }
       warehouse_positions: {
@@ -374,26 +346,28 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "product_movements_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "warehouse_occupation_report"
-            referencedColumns: ["product_id"]
-          },
         ]
       }
       warehouse_occupation_report: {
         Row: {
           entry_date: string | null
           floor: Database["public"]["Enums"]["warehouse_floor"] | null
+          id: string | null
           position_number: number | null
           product_id: string | null
           product_name: string | null
           quantity: number | null
           stored_by: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "warehouse_occupations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
