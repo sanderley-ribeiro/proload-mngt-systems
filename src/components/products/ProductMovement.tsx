@@ -172,6 +172,16 @@ export default function ProductMovement() {
       // Remove o prefixo "pm_" se existir
       const cleanId = movementId.replace('pm_', '');
       
+      // Busca o movimento primeiro para garantir que existe
+      const { data: movements, error: fetchError } = await supabase
+        .from("combined_movements_view")
+        .select("id")
+        .eq("id", cleanId)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+      if (!movements) throw new Error("Movimento não encontrado");
+
       const { error } = await supabase
         .from("product_movements")
         .delete()
