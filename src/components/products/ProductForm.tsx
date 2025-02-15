@@ -1,9 +1,9 @@
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { format, parseISO } from "date-fns";
 import { Pencil, Trash2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Product {
   id: string;
@@ -27,10 +28,10 @@ interface Product {
 
 export default function ProductForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-  const { data: products, isError } = useQuery<Product[]>({
+  const { data: products, isError } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -38,99 +39,113 @@ export default function ProductForm() {
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching products:", error);
+        throw error;
+      }
       return data;
     },
   });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast.error("Você precisa estar autenticado para cadastrar produtos");
+      return;
+    }
+
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
     const productName = formData.get("name") as string;
 
     try {
+      console.log("Checking for existing products with name:", productName);
       const { data: existingProducts, error: searchError } = await supabase
         .from("products")
         .select("name")
         .eq("name", productName);
 
-      if (searchError) throw searchError;
+      if (searchError) {
+        console.error("Error checking existing products:", searchError);
+        throw searchError;
+      }
 
       if (existingProducts && existingProducts.length > 0) {
-        toast({
-          title: "Erro ao cadastrar produto",
-          description: "Já existe um produto cadastrado com este nome",
-          variant: "destructive",
-        });
+        toast.error("Já existe um produto cadastrado com este nome");
         return;
       }
 
-      const data = {
+      const productData = {
         name: productName,
         barcode: formData.get("barcode") as string,
         unit: formData.get("unit") as string,
       };
 
-      const { error: insertError } = await supabase.from("products").insert(data);
-      if (insertError) throw insertError;
+      console.log("Inserting new product:", productData);
+      const { error: insertError } = await supabase
+        .from("products")
+        .insert(productData);
 
-      toast({
-        title: "Produto cadastrado com sucesso!",
-      });
-      
+      if (insertError) {
+        console.error("Error inserting product:", insertError);
+        throw insertError;
+      }
+
+      toast.success("Produto cadastrado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["products"] });
-      
       e.currentTarget.reset();
     } catch (error: any) {
-      toast({
-        title: "Erro ao cadastrar produto",
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error("Error in handleSubmit:", error);
+      toast.error(`Erro ao cadastrar produto: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDelete = async (productId: string) => {
+    if (!user) {
+      toast.error("Você precisa estar autenticado para excluir produtos");
+      return;
+    }
+
     try {
+      console.log("Checking manifest items for product:", productId);
       const { data: manifestItems, error: checkError } = await supabase
         .from("shipping_manifest_items")
         .select("id")
         .eq("product_id", productId)
         .limit(1);
 
-      if (checkError) throw checkError;
+      if (checkError) {
+        console.error("Error checking manifest items:", checkError);
+        throw checkError;
+      }
 
       if (manifestItems && manifestItems.length > 0) {
-        toast({
-          title: "Não é possível excluir o produto",
-          description: "Este produto está sendo utilizado em um ou mais romaneios e não pode ser excluído.",
-          variant: "destructive",
-        });
+        toast.error(
+          "Este produto está sendo utilizado em um ou mais romaneios e não pode ser excluído."
+        );
         return;
       }
 
+      console.log("Deleting product:", productId);
       const { error } = await supabase
         .from("products")
         .delete()
         .eq("id", productId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error deleting product:", error);
+        throw error;
+      }
 
-      toast({
-        title: "Produto excluído com sucesso!",
-      });
-
+      toast.success("Produto excluído com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["products"] });
     } catch (error: any) {
-      toast({
-        title: "Erro ao excluir produto",
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error("Error in handleDelete:", error);
+      toast.error(`Erro ao excluir produto: ${error.message}`);
     }
   };
 
@@ -193,9 +208,7 @@ export default function ProductForm() {
                 <TableCell>{product.name}</TableCell>
                 <TableCell>{product.barcode}</TableCell>
                 <TableCell>{product.unit}</TableCell>
-                <TableCell>
-                  {formatDate(product.created_at)}
-                </TableCell>
+                <TableCell>{formatDate(product.created_at)}</TableCell>
                 <TableCell className="text-right space-x-2">
                   <Button
                     onClick={() => {
