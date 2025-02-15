@@ -30,7 +30,7 @@ export default function ProductForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: products } = useQuery<Product[]>({
+  const { data: products, isError } = useQuery<Product[]>({
     queryKey: ["products"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -142,6 +142,14 @@ export default function ProductForm() {
       return dateString;
     }
   };
+
+  if (isError) {
+    return (
+      <div className="text-center p-4 text-red-500">
+        Erro ao carregar produtos. Por favor, tente novamente.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

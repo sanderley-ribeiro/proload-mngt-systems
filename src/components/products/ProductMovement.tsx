@@ -1,9 +1,7 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -23,6 +21,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Product {
   id: string;
@@ -32,20 +43,21 @@ interface Product {
 
 interface Movement {
   id: string;
-  type: "input" | "output";
+  movement_type: "input" | "output";
   quantity: number;
-  date: string;
-  notes: string;
-  products: {
-    name: string;
-    unit: string;
-  };
+  movement_date: string;
+  notes: string | null;
+  product_name: string;
+  product_unit: string;
+  floor: string | null;
+  position_number: number | null;
+  created_by_name: string | null;
 }
 
 export default function ProductMovement() {
   const [isLoading, setIsLoading] = useState(false);
   const [movementType, setMovementType] = useState<"input" | "output">("input");
-  const { toast } = useToast();
+  const { toast: useToastNotify } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   const queryClient = useQueryClient();
 
@@ -62,60 +74,47 @@ export default function ProductMovement() {
     },
   });
 
-  const { data: movements, isError: isMovementsError, error: movementsError } = useQuery({
+  const { data: movements, isError: isMovementsError, error: movementsError } = useQuery<Movement[]>({
     queryKey: ["movements"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("product_movements")
-        .select(`
-          id,
-          type,
-          quantity,
-          date,
-          notes,
-          products (
-            name,
-            unit
-          )
-        `)
-        .order('date', { ascending: false });
+        .from("all_stock_movements_view")
+        .select("*")
+        .order('movement_date', { ascending: false });
 
       if (error) throw error;
-      return data as Movement[];
+      return data;
     },
   });
 
-  // Handle errors
   useEffect(() => {
     if (isProductsError) {
-      toast({
+      useToastNotify({
         title: "Erro ao carregar produtos",
         description: productsError?.message,
         variant: "destructive",
       });
     }
     if (isMovementsError) {
-      toast({
+      useToastNotify({
         title: "Erro ao carregar movimentações",
         description: movementsError?.message,
         variant: "destructive",
       });
     }
-  }, [isProductsError, isMovementsError, productsError, movementsError, toast]);
+  }, [isProductsError, isMovementsError, productsError, movementsError, useToastNotify]);
 
-  // Subscribe to real-time changes
   useEffect(() => {
     const channel = supabase
       .channel('schema-db-changes')
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'product_movements'
         },
         () => {
-          // Invalidate and refetch when new movement is added
           queryClient.invalidateQueries({ queryKey: ["movements"] });
         }
       )
@@ -149,20 +148,43 @@ export default function ProductMovement() {
       
       if (error) throw error;
 
-      toast({
-        title: "Movimento registrado com sucesso!",
-      });
+      toast.success("Movimento registrado com sucesso!");
       
       formRef.current?.reset();
       setMovementType("input"); // Reset movement type to default
+      
+      queryClient.invalidateQueries({ queryKey: ["movements"] });
+      queryClient.invalidateQueries({ queryKey: ["warehouse-occupation-report"] });
     } catch (error: any) {
-      toast({
-        title: "Erro ao registrar movimento",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error("Erro ao registrar movimento: " + error.message);
+      console.error("Erro ao registrar movimento:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (movementId: string) => {
+    try {
+      if (!movementId.startsWith('pm_')) {
+        toast.error("Não é possível excluir este tipo de movimento");
+        return;
+      }
+
+      const cleanId = movementId.replace('pm_', '');
+      
+      const { error } = await supabase
+        .from("product_movements")
+        .delete()
+        .eq("id", cleanId);
+
+      if (error) throw error;
+
+      toast.success("Movimento excluído com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["movements"] });
+      queryClient.invalidateQueries({ queryKey: ["warehouse-occupation-report"] });
+    } catch (error: any) {
+      toast.error("Erro ao excluir movimento: " + error.message);
+      console.error("Erro ao excluir movimento:", error);
     }
   };
 
@@ -248,23 +270,63 @@ export default function ProductMovement() {
                 <TableHead>Produto</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead>Quantidade</TableHead>
+                <TableHead>Posição</TableHead>
                 <TableHead>Observações</TableHead>
+                <TableHead>Responsável</TableHead>
+                <TableHead className="w-[70px]">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {movements?.map((movement) => (
                 <TableRow key={movement.id}>
                   <TableCell>
-                    {format(new Date(movement.date), "dd/MM/yyyy HH:mm")}
+                    {format(new Date(movement.movement_date), "dd/MM/yyyy HH:mm")}
                   </TableCell>
                   <TableCell>
-                    {movement.products.name} ({movement.products.unit})
+                    {movement.product_name} ({movement.product_unit})
                   </TableCell>
                   <TableCell>
-                    {movement.type === "input" ? "Entrada" : "Saída"}
+                    {movement.movement_type === "input" ? "Entrada" : "Saída"}
                   </TableCell>
                   <TableCell>{movement.quantity}</TableCell>
+                  <TableCell>
+                    {movement.floor && movement.position_number 
+                      ? `${movement.floor}-${movement.position_number}`
+                      : "N/A"}
+                  </TableCell>
                   <TableCell>{movement.notes}</TableCell>
+                  <TableCell>{movement.created_by_name || "N/A"}</TableCell>
+                  <TableCell>
+                    {movement.id?.startsWith('pm_') ? (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tem certeza que deseja excluir esta movimentação? Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(movement.id!)}
+                              className="bg-red-500 hover:bg-red-600"
+                            >
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    ) : null}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
