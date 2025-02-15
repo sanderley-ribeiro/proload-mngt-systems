@@ -10,6 +10,7 @@ import Products from "./pages/Products";
 import Production from "./pages/Production";
 import Loading from "./pages/Loading";
 import Report from "./pages/Report";
+import Stock from "./pages/Stock";
 import NotFound from "./pages/NotFound";
 import AppLayout from "./components/layout/AppLayout";
 import Login from "./pages/Login";
@@ -54,6 +55,7 @@ const App = () => (
                     <Route path="production" element={<Production />} />
                     <Route path="loading" element={<Loading />} />
                     <Route path="loading/:id/scan" element={<ManifestScanning />} />
+                    <Route path="stock" element={<Stock />} />
                     <Route path="report" element={<Report />} />
                     <Route path="*" element={<NotFound />} />
                   </Route>
