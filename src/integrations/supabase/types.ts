@@ -9,7 +9,260 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      product_movements: {
+        Row: {
+          created_at: string
+          created_by: string
+          date: string
+          id: string
+          notes: string | null
+          product_id: string
+          quantity: number
+          type: Database["public"]["Enums"]["movement_type"]
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          date?: string
+          id?: string
+          notes?: string | null
+          product_id: string
+          quantity: number
+          type: Database["public"]["Enums"]["movement_type"]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          product_id?: string
+          quantity?: number
+          type?: Database["public"]["Enums"]["movement_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          barcode: string
+          created_at: string
+          id: string
+          name: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          barcode: string
+          created_at?: string
+          id?: string
+          name: string
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          barcode?: string
+          created_at?: string
+          id?: string
+          name?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      shipping_manifest_items: {
+        Row: {
+          created_at: string
+          id: string
+          manifest_id: string
+          product_id: string
+          quantity: number
+          scanned_at: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          manifest_id: string
+          product_id: string
+          quantity: number
+          scanned_at?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          manifest_id?: string
+          product_id?: string
+          quantity?: number
+          scanned_at?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_manifest_items_manifest_id_fkey"
+            columns: ["manifest_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_manifests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipping_manifest_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shipping_manifests: {
+        Row: {
+          client_name: string
+          created_at: string
+          created_by: string
+          driver_name: string
+          id: string
+          number: string
+          status: string
+          vehicle_plate: string
+        }
+        Insert: {
+          client_name: string
+          created_at?: string
+          created_by: string
+          driver_name: string
+          id?: string
+          number: string
+          status?: string
+          vehicle_plate: string
+        }
+        Update: {
+          client_name?: string
+          created_at?: string
+          created_by?: string
+          driver_name?: string
+          id?: string
+          number?: string
+          status?: string
+          vehicle_plate?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      warehouse_occupations: {
+        Row: {
+          created_at: string
+          created_by: string
+          entry_date: string
+          id: string
+          position_id: string
+          product_id: string
+          quantity: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          entry_date?: string
+          id?: string
+          position_id: string
+          product_id: string
+          quantity: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          entry_date?: string
+          id?: string
+          position_id?: string
+          product_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warehouse_occupations_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "warehouse_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warehouse_occupations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      warehouse_positions: {
+        Row: {
+          created_at: string
+          floor: Database["public"]["Enums"]["warehouse_floor"]
+          id: string
+          position_number: number
+        }
+        Insert: {
+          created_at?: string
+          floor: Database["public"]["Enums"]["warehouse_floor"]
+          id?: string
+          position_number: number
+        }
+        Update: {
+          created_at?: string
+          floor?: Database["public"]["Enums"]["warehouse_floor"]
+          id?: string
+          position_number?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -29,7 +282,9 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "operator"
+      movement_type: "input" | "output"
+      warehouse_floor: "A" | "B" | "C"
     }
     CompositeTypes: {
       [_ in never]: never
