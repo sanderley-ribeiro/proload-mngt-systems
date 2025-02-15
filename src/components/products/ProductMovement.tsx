@@ -3,7 +3,6 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -155,12 +154,17 @@ export default function ProductMovement() {
       
       formRef.current?.reset();
       setMovementType("input"); // Reset movement type to default
+      
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ["movements"] });
+      queryClient.invalidateQueries({ queryKey: ["warehouse-occupation-report"] });
     } catch (error: any) {
       toast({
         title: "Erro ao registrar movimento",
         description: error.message,
         variant: "destructive",
       });
+      console.error("Erro ao registrar movimento:", error);
     } finally {
       setIsLoading(false);
     }
