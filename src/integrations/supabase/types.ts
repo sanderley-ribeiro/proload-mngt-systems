@@ -9,6 +9,51 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      manifest_items: {
+        Row: {
+          created_at: string
+          id: string
+          loaded_quantity: number
+          manifest_id: string
+          product_id: string
+          quantity: number
+          scanned_at: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          loaded_quantity?: number
+          manifest_id: string
+          product_id: string
+          quantity: number
+          scanned_at?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          loaded_quantity?: number
+          manifest_id?: string
+          product_id?: string
+          quantity?: number
+          scanned_at?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manifest_items_manifest_id_fkey"
+            columns: ["manifest_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_manifests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manifest_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_movements: {
         Row: {
           created_at: string
@@ -42,18 +87,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "product_movements_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "product_movements_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "products"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "product_movements_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
-            referencedRelation: "warehouse_occupation_report"
-            referencedColumns: ["product_id"]
+            referencedRelation: "products"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -148,13 +193,6 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "shipping_manifest_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "warehouse_occupation_report"
-            referencedColumns: ["product_id"]
-          },
         ]
       }
       shipping_manifests: {
@@ -188,7 +226,15 @@ export type Database = {
           status?: string
           vehicle_plate?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "shipping_manifests_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -211,116 +257,31 @@ export type Database = {
         }
         Relationships: []
       }
-      warehouse_occupations: {
+    }
+    Views: {
+      daily_production_view: {
         Row: {
-          created_at: string
-          created_by: string
-          entry_date: string
-          id: string
-          position_id: string
-          product_id: string
-          quantity: number
-        }
-        Insert: {
-          created_at?: string
-          created_by: string
-          entry_date?: string
-          id?: string
-          position_id: string
-          product_id: string
-          quantity: number
-        }
-        Update: {
-          created_at?: string
-          created_by?: string
-          entry_date?: string
-          id?: string
-          position_id?: string
-          product_id?: string
-          quantity?: number
+          product_id: string | null
+          production_date: string | null
+          total_production: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "warehouse_occupations_position_id_fkey"
-            columns: ["position_id"]
-            isOneToOne: false
-            referencedRelation: "warehouse_positions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "warehouse_occupations_product_id_fkey"
+            foreignKeyName: "product_movements_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "warehouse_occupations_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "warehouse_occupation_report"
-            referencedColumns: ["product_id"]
-          },
         ]
-      }
-      warehouse_positions: {
-        Row: {
-          created_at: string
-          floor: Database["public"]["Enums"]["warehouse_floor"]
-          id: string
-          position_number: number
-        }
-        Insert: {
-          created_at?: string
-          floor: Database["public"]["Enums"]["warehouse_floor"]
-          id?: string
-          position_number: number
-        }
-        Update: {
-          created_at?: string
-          floor?: Database["public"]["Enums"]["warehouse_floor"]
-          id?: string
-          position_number?: number
-        }
-        Relationships: []
-      }
-    }
-    Views: {
-      all_stock_movements_view: {
-        Row: {
-          created_by_name: string | null
-          floor: Database["public"]["Enums"]["warehouse_floor"] | null
-          id: string | null
-          movement_date: string | null
-          movement_type: Database["public"]["Enums"]["movement_type"] | null
-          notes: string | null
-          position_number: number | null
-          product_name: string | null
-          product_unit: string | null
-          quantity: number | null
-        }
-        Relationships: []
-      }
-      warehouse_occupation_report: {
-        Row: {
-          entry_date: string | null
-          floor: Database["public"]["Enums"]["warehouse_floor"] | null
-          id: string | null
-          position_number: number | null
-          product_id: string | null
-          product_name: string | null
-          quantity: number | null
-          stored_by: string | null
-        }
-        Relationships: []
       }
     }
     Functions: {
-      find_best_position: {
+      has_role: {
         Args: {
-          product_id: string
+          role: Database["public"]["Enums"]["app_role"]
         }
-        Returns: string
+        Returns: boolean
       }
       update_manifest_status: {
         Args: {
@@ -332,7 +293,6 @@ export type Database = {
     Enums: {
       app_role: "admin" | "operator"
       movement_type: "input" | "output"
-      warehouse_floor: "A" | "B" | "C"
     }
     CompositeTypes: {
       [_ in never]: never

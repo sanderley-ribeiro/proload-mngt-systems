@@ -30,7 +30,6 @@ const Dashboard = () => {
         <TabsList>
           <TabsTrigger value="stock">Estoque Atual</TabsTrigger>
           <TabsTrigger value="production">Produção Diária</TabsTrigger>
-          <TabsTrigger value="inventory">Estoque</TabsTrigger>
         </TabsList>
 
         <TabsContent value="stock">
@@ -39,23 +38,6 @@ const Dashboard = () => {
 
         <TabsContent value="production">
           <DailyProductionChart />
-        </TabsContent>
-
-        <TabsContent value="inventory" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-              <h3 className="text-lg font-semibold mb-2">Total de Produtos</h3>
-              <p className="text-3xl font-bold">--</p>
-            </div>
-            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-              <h3 className="text-lg font-semibold mb-2">Movimentações Hoje</h3>
-              <p className="text-3xl font-bold">--</p>
-            </div>
-            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-              <h3 className="text-lg font-semibold mb-2">Valor Total</h3>
-              <p className="text-3xl font-bold">R$ --</p>
-            </div>
-          </div>
         </TabsContent>
       </Tabs>
     </div>
