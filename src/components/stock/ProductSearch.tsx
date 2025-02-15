@@ -54,17 +54,31 @@ export function ProductSearch() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products?.map((item) => (
-              <TableRow key={`${item.product_id}-${item.position_number}`}>
-                <TableCell>{item.product_name}</TableCell>
-                <TableCell>{item.floor}</TableCell>
-                <TableCell>{item.position_number}</TableCell>
-                <TableCell>{item.quantity}</TableCell>
-                <TableCell>
-                  {new Date(item.entry_date).toLocaleDateString()}
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center">
+                  Carregando...
                 </TableCell>
               </TableRow>
-            ))}
+            ) : products?.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center">
+                  Nenhum produto encontrado
+                </TableCell>
+              </TableRow>
+            ) : (
+              products?.map((item) => (
+                <TableRow key={`${item.product_id}-${item.position_number}`}>
+                  <TableCell>{item.product_name}</TableCell>
+                  <TableCell>{item.floor}</TableCell>
+                  <TableCell>{item.position_number}</TableCell>
+                  <TableCell>{item.quantity}</TableCell>
+                  <TableCell>
+                    {new Date(item.entry_date).toLocaleDateString()}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
