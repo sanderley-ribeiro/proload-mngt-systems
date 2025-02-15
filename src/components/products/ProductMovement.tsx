@@ -44,14 +44,15 @@ interface Product {
 
 interface Movement {
   id: string;
-  type: "input" | "output";
+  movement_type: "input" | "output";
   quantity: number;
-  date: string;
+  movement_date: string;
   notes: string;
   product_name: string;
   product_unit: string;
   floor: string | null;
   position_number: number | null;
+  created_by_name: string | null;
 }
 
 export default function ProductMovement() {
@@ -78,9 +79,9 @@ export default function ProductMovement() {
     queryKey: ["movements"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("combined_movements_view")
+        .from("all_stock_movements_view")
         .select("*")
-        .order('date', { ascending: false });
+        .order('movement_date', { ascending: false });
 
       if (error) throw error;
       return data as Movement[];
@@ -112,7 +113,7 @@ export default function ProductMovement() {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'product_movements'
         },
@@ -173,14 +174,14 @@ export default function ProductMovement() {
       const cleanId = movementId.replace('pm_', '');
       
       // Busca o movimento primeiro para garantir que existe
-      const { data: movements, error: fetchError } = await supabase
-        .from("combined_movements_view")
+      const { data: movement, error: fetchError } = await supabase
+        .from("all_stock_movements_view")
         .select("id")
-        .eq("id", cleanId)
+        .eq("id", movementId)
         .maybeSingle();
 
       if (fetchError) throw fetchError;
-      if (!movements) throw new Error("Movimento não encontrado");
+      if (!movement) throw new Error("Movimento não encontrado");
 
       const { error } = await supabase
         .from("product_movements")
@@ -282,6 +283,7 @@ export default function ProductMovement() {
                 <TableHead>Quantidade</TableHead>
                 <TableHead>Posição</TableHead>
                 <TableHead>Observações</TableHead>
+                <TableHead>Responsável</TableHead>
                 <TableHead className="w-[70px]">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -289,13 +291,13 @@ export default function ProductMovement() {
               {movements?.map((movement) => (
                 <TableRow key={movement.id}>
                   <TableCell>
-                    {format(new Date(movement.date), "dd/MM/yyyy HH:mm")}
+                    {format(new Date(movement.movement_date), "dd/MM/yyyy HH:mm")}
                   </TableCell>
                   <TableCell>
                     {movement.product_name} ({movement.product_unit})
                   </TableCell>
                   <TableCell>
-                    {movement.type === "input" ? "Entrada" : "Saída"}
+                    {movement.movement_type === "input" ? "Entrada" : "Saída"}
                   </TableCell>
                   <TableCell>{movement.quantity}</TableCell>
                   <TableCell>
@@ -304,6 +306,7 @@ export default function ProductMovement() {
                       : "N/A"}
                   </TableCell>
                   <TableCell>{movement.notes}</TableCell>
+                  <TableCell>{movement.created_by_name || "N/A"}</TableCell>
                   <TableCell>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -342,3 +345,4 @@ export default function ProductMovement() {
     </div>
   );
 }
+
