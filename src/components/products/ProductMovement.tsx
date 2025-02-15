@@ -22,6 +22,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Product {
   id: string;
@@ -44,7 +46,7 @@ interface Movement {
 export default function ProductMovement() {
   const [isLoading, setIsLoading] = useState(false);
   const [movementType, setMovementType] = useState<"input" | "output">("input");
-  const { toast } = useToast();
+  const { toast: useToastNotify } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   const queryClient = useQueryClient();
 
@@ -77,20 +79,20 @@ export default function ProductMovement() {
   // Handle errors
   useEffect(() => {
     if (isProductsError) {
-      toast({
+      useToastNotify({
         title: "Erro ao carregar produtos",
         description: productsError?.message,
         variant: "destructive",
       });
     }
     if (isMovementsError) {
-      toast({
+      useToastNotify({
         title: "Erro ao carregar movimentações",
         description: movementsError?.message,
         variant: "destructive",
       });
     }
-  }, [isProductsError, isMovementsError, productsError, movementsError, toast]);
+  }, [isProductsError, isMovementsError, productsError, movementsError, useToastNotify]);
 
   // Subscribe to real-time changes
   useEffect(() => {
@@ -138,9 +140,7 @@ export default function ProductMovement() {
       
       if (error) throw error;
 
-      toast({
-        title: "Movimento registrado com sucesso!",
-      });
+      toast.success("Movimento registrado com sucesso!");
       
       formRef.current?.reset();
       setMovementType("input"); // Reset movement type to default
@@ -149,14 +149,28 @@ export default function ProductMovement() {
       queryClient.invalidateQueries({ queryKey: ["movements"] });
       queryClient.invalidateQueries({ queryKey: ["warehouse-occupation-report"] });
     } catch (error: any) {
-      toast({
-        title: "Erro ao registrar movimento",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error("Erro ao registrar movimento: " + error.message);
       console.error("Erro ao registrar movimento:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (movementId: string) => {
+    try {
+      const { error } = await supabase
+        .from("product_movements")
+        .delete()
+        .eq("id", movementId);
+
+      if (error) throw error;
+
+      toast.success("Movimento excluído com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["movements"] });
+      queryClient.invalidateQueries({ queryKey: ["warehouse-occupation-report"] });
+    } catch (error: any) {
+      toast.error("Erro ao excluir movimento: " + error.message);
+      console.error("Erro ao excluir movimento:", error);
     }
   };
 
@@ -244,6 +258,7 @@ export default function ProductMovement() {
                 <TableHead>Quantidade</TableHead>
                 <TableHead>Posição</TableHead>
                 <TableHead>Observações</TableHead>
+                <TableHead className="w-[70px]">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -265,6 +280,15 @@ export default function ProductMovement() {
                       : "N/A"}
                   </TableCell>
                   <TableCell>{movement.notes}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(movement.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
