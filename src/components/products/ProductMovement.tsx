@@ -158,10 +158,13 @@ export default function ProductMovement() {
 
   const handleDelete = async (movementId: string) => {
     try {
+      // Remove o prefixo "pm_" se existir
+      const cleanId = movementId.replace('pm_', '');
+      
       const { error } = await supabase
         .from("product_movements")
         .delete()
-        .eq("id", movementId);
+        .eq("id", cleanId);
 
       if (error) throw error;
 
