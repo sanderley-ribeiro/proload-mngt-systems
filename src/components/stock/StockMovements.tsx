@@ -42,7 +42,7 @@ export function StockMovements() {
         </TableHeader>
         <TableBody>
           {movements?.map((movement) => (
-            <TableRow key={movement.id}>
+            <TableRow key={`${movement.product_id}-${movement.position_number}-${movement.entry_date}`}>
               <TableCell>
                 {new Date(movement.entry_date).toLocaleString()}
               </TableCell>

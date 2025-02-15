@@ -54,7 +54,7 @@ export function ProductSearch() {
           </TableHeader>
           <TableBody>
             {products?.map((item) => (
-              <TableRow key={item.id}>
+              <TableRow key={`${item.product_id}-${item.position_number}`}>
                 <TableCell>{item.product_name}</TableCell>
                 <TableCell>{item.floor}</TableCell>
                 <TableCell>{item.position_number}</TableCell>
