@@ -1,117 +1,167 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
 
-export default function Login() {
+const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-
+    
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-    const name = formData.get("name") as string;
-
+    
     try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              name,
-            },
-          },
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        toast({
+          title: "Erro ao fazer login",
+          description: "E-mail ou senha incorretos. Por favor, verifique suas credenciais.",
+          variant: "destructive",
         });
-        if (error) throw error;
-        toast.success("Cadastro realizado com sucesso! Verifique seu email para confirmar.");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        navigate("/");
+        return;
       }
+      
+      navigate("/");
     } catch (error: any) {
-      toast.error(error.message);
+      toast({
+        title: "Erro ao fazer login",
+        description: "E-mail ou senha incorretos. Por favor, verifique suas credenciais.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      
+      if (error) {
+        toast({
+          title: "Erro ao fazer cadastro",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      toast({
+        title: "Cadastro realizado",
+        description: "Verifique seu e-mail para confirmar o cadastro.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao fazer cadastro",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">
-            {isSignUp ? "Criar conta" : "Login"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignUp && (
+    <div className="h-screen w-screen flex items-center justify-center bg-background">
+      <div className="w-full max-w-md px-4">
+        <Card className="w-full">
+          <CardHeader className="space-y-2 text-center">
+            <CardTitle className="text-3xl font-bold">Sistema de Gerenciamento</CardTitle>
+            <CardDescription className="text-base">
+              Entre com sua conta ou cadastre-se
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Nome</Label>
                 <Input
-                  id="name"
-                  name="name"
-                  placeholder="Seu nome completo"
-                  required={isSignUp}
+                  type="email"
+                  name="email"
+                  placeholder="E-mail"
+                  required
+                  disabled={isLoading}
+                  className="w-full"
+                />
+                <Input
+                  type="password"
+                  name="password"
+                  placeholder="Senha"
+                  required
+                  disabled={isLoading}
+                  className="w-full"
                 />
               </div>
-            )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="seu@email.com"
-                required
-              />
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Entrando..." : "Entrar"}
+              </Button>
+            </form>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Ou
+                </span>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                required
-              />
-            </div>
-
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading 
-                ? "Carregando..." 
-                : isSignUp ? "Criar conta" : "Entrar"}
-            </Button>
-
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full"
-              onClick={() => setIsSignUp(!isSignUp)}
-            >
-              {isSignUp 
-                ? "Já tem uma conta? Faça login" 
-                : "Não tem uma conta? Cadastre-se"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+            <form onSubmit={handleSignUp} className="space-y-4">
+              <div className="space-y-2">
+                <Input
+                  type="email"
+                  name="email"
+                  placeholder="E-mail"
+                  required
+                  disabled={isLoading}
+                  className="w-full"
+                />
+                <Input
+                  type="password"
+                  name="password"
+                  placeholder="Senha"
+                  required
+                  disabled={isLoading}
+                  className="w-full"
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Cadastrando..." : "Cadastrar"}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="justify-center text-sm text-muted-foreground">
+            Sistema de Gerenciamento &copy; {new Date().getFullYear()}
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
-}
+};
+
+export default Login;

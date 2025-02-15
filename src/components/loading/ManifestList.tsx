@@ -54,6 +54,11 @@ export default function ManifestList() {
   });
 
   const handleDelete = async (manifestId: string, status: string) => {
+    if (status !== 'em aberto') {
+      toast.error("Apenas romaneios em aberto podem ser excluídos");
+      return;
+    }
+
     try {
       // First delete the manifest items
       const { error: itemsError } = await supabase
@@ -203,7 +208,7 @@ export default function ManifestList() {
                 </Badge>
               </TableCell>
               <TableCell className="flex gap-2">
-                {manifest.status === "em aberto" ? (
+                {manifest.status === "em aberto" && (
                   <>
                     <Button
                       variant="ghost"
@@ -220,14 +225,6 @@ export default function ManifestList() {
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
                   </>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(manifest.id, manifest.status)}
-                  >
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
                 )}
               </TableCell>
             </TableRow>
