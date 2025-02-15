@@ -338,22 +338,13 @@ export type Database = {
           floor: Database["public"]["Enums"]["warehouse_floor"] | null
           id: string | null
           notes: string | null
-          position_id: string | null
           position_number: number | null
           product_name: string | null
           product_unit: string | null
           quantity: number | null
           type: Database["public"]["Enums"]["movement_type"] | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "warehouse_occupations_position_id_fkey"
-            columns: ["position_id"]
-            isOneToOne: false
-            referencedRelation: "warehouse_positions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       daily_production_view: {
         Row: {
