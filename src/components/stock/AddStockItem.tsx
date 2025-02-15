@@ -12,11 +12,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function AddStockItem() {
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState("");
   const queryClient = useQueryClient();
+  const { user } = useAuth(); // Usando o contexto de autenticação
 
   const { data: products } = useQuery({
     queryKey: ["products"],
@@ -33,8 +35,7 @@ export function AddStockItem() {
 
   const { mutate: addItem, isPending } = useMutation({
     mutationFn: async () => {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.user?.id) {
+      if (!user?.id) {
         throw new Error("Usuário não autenticado");
       }
 
@@ -51,7 +52,7 @@ export function AddStockItem() {
           position_id: positionId,
           product_id: productId,
           quantity: parseInt(quantity),
-          created_by: session.user.id
+          created_by: user.id
         });
 
       if (occupationError) throw occupationError;
