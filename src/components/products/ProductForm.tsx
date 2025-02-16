@@ -29,11 +29,14 @@ interface Product {
 export default function ProductForm() {
   const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
+
+  console.log("Auth state:", { user, session });
 
   const { data: products, isError } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
+      console.log("Fetching products with session:", session);
       const { data, error } = await supabase
         .from("products")
         .select("*")
@@ -43,15 +46,17 @@ export default function ProductForm() {
         console.error("Error fetching products:", error);
         throw error;
       }
+      
+      console.log("Products fetched:", data);
       return data;
     },
-    enabled: !!user, // Só executa a query se o usuário estiver autenticado
+    enabled: !!session, // Alterado para verificar a sessão ao invés de apenas o user
   });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    if (!user) {
+    if (!session) {
       toast.error("Você precisa estar autenticado para cadastrar produtos");
       return;
     }
@@ -61,7 +66,7 @@ export default function ProductForm() {
     const productName = formData.get("name") as string;
 
     try {
-      console.log("Current user:", user);
+      console.log("Current session:", session);
       console.log("Checking for existing products with name:", productName);
       
       const { data: existingProducts, error: searchError } = await supabase
@@ -107,13 +112,13 @@ export default function ProductForm() {
   };
 
   const handleDelete = async (productId: string) => {
-    if (!user) {
+    if (!session) {
       toast.error("Você precisa estar autenticado para excluir produtos");
       return;
     }
 
     try {
-      console.log("Current user:", user);
+      console.log("Current session:", session);
       console.log("Checking manifest items for product:", productId);
       
       const { data: manifestItems, error: checkError } = await supabase
@@ -170,7 +175,7 @@ export default function ProductForm() {
     );
   }
 
-  if (!user) {
+  if (!session) {
     return (
       <div className="text-center p-4 text-red-500">
         Você precisa estar autenticado para acessar esta página.
@@ -224,9 +229,7 @@ export default function ProductForm() {
                 <TableCell className="text-right space-x-2">
                   <Button
                     onClick={() => {
-                      toast({
-                        description: "Funcionalidade de edição será implementada em breve",
-                      });
+                      toast.message("Funcionalidade de edição será implementada em breve");
                     }}
                     size="icon"
                     variant="ghost"
