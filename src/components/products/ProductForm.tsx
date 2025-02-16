@@ -49,18 +49,17 @@ export default function ProductForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    if (!user) {
-      toast.error("Você precisa estar autenticado para cadastrar produtos");
-      return;
-    }
-
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
     const productName = formData.get("name") as string;
 
     try {
+      if (!user) {
+        toast.error("Você precisa estar autenticado para cadastrar produtos");
+        return;
+      }
+
       console.log("Checking for existing products with name:", productName);
       const { data: existingProducts, error: searchError } = await supabase
         .from("products")
@@ -213,7 +212,6 @@ export default function ProductForm() {
                   <Button
                     onClick={() => {
                       toast({
-                        title: "Em breve",
                         description: "Funcionalidade de edição será implementada em breve",
                       });
                     }}
