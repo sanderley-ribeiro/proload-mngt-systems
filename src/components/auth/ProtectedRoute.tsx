@@ -1,7 +1,7 @@
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
@@ -9,35 +9,14 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const { session } = useAuth();
   const location = useLocation();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
-    };
+  console.log("ProtectedRoute - Current session:", session);
+  console.log("ProtectedRoute - Current location:", location);
 
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  if (isAuthenticated === null) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
+  if (!session) {
+    console.log("ProtectedRoute - No session, redirecting to login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
