@@ -45,22 +45,25 @@ export default function ProductForm() {
       }
       return data;
     },
+    enabled: !!user, // Só executa a query se o usuário estiver autenticado
   });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
+    
+    if (!user) {
+      toast.error("Você precisa estar autenticado para cadastrar produtos");
+      return;
+    }
 
+    setIsLoading(true);
     const formData = new FormData(e.currentTarget);
     const productName = formData.get("name") as string;
 
     try {
-      if (!user) {
-        toast.error("Você precisa estar autenticado para cadastrar produtos");
-        return;
-      }
-
+      console.log("Current user:", user);
       console.log("Checking for existing products with name:", productName);
+      
       const { data: existingProducts, error: searchError } = await supabase
         .from("products")
         .select("name")
@@ -110,7 +113,9 @@ export default function ProductForm() {
     }
 
     try {
+      console.log("Current user:", user);
       console.log("Checking manifest items for product:", productId);
+      
       const { data: manifestItems, error: checkError } = await supabase
         .from("shipping_manifest_items")
         .select("id")
@@ -161,6 +166,14 @@ export default function ProductForm() {
     return (
       <div className="text-center p-4 text-red-500">
         Erro ao carregar produtos. Por favor, tente novamente.
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="text-center p-4 text-red-500">
+        Você precisa estar autenticado para acessar esta página.
       </div>
     );
   }
