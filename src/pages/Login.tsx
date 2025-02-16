@@ -1,12 +1,13 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Lock } from "lucide-react";
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
@@ -20,60 +21,65 @@ export default function Login() {
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-    const name = formData.get("name") as string;
 
     try {
+      let result;
+      
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        result = await supabase.auth.signUp({
           email,
           password,
-          options: {
-            data: {
-              name,
-            },
-          },
         });
-        if (error) throw error;
-        toast.success("Cadastro realizado com sucesso! Verifique seu email para confirmar.");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        result = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-        if (error) throw error;
+      }
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      if (isSignUp) {
+        toast.success("Conta criada com sucesso! Faça login para continuar.");
+        setIsSignUp(false);
+      } else {
+        toast.success("Login realizado com sucesso!");
         navigate("/");
       }
     } catch (error: any) {
-      toast.error(error.message);
+      console.error("Auth error:", error);
+      
+      let errorMessage = "Erro ao realizar a operação";
+      
+      if (error.message.includes("User already registered")) {
+        errorMessage = "Este e-mail já está cadastrado";
+      } else if (error.message.includes("Invalid login credentials")) {
+        errorMessage = "E-mail ou senha inválidos";
+      } else if (error.message.includes("Password should be at least 6 characters")) {
+        errorMessage = "A senha deve ter pelo menos 6 caracteres";
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/50 p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">
-            {isSignUp ? "Criar conta" : "Login"}
+        <CardHeader className="space-y-1 flex flex-col items-center">
+          <Lock className="w-12 h-12 text-primary mb-2" />
+          <CardTitle className="text-2xl text-center">
+            {isSignUp ? "Criar Conta" : "Entrar no Sistema"}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  placeholder="Seu nome completo"
-                  required={isSignUp}
-                />
-              </div>
-            )}
-            
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">E-mail</Label>
               <Input
                 id="email"
                 name="email"
@@ -82,7 +88,7 @@ export default function Login() {
                 required
               />
             </div>
-
+            
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
               <Input
@@ -93,10 +99,16 @@ export default function Login() {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading 
-                ? "Carregando..." 
-                : isSignUp ? "Criar conta" : "Entrar"}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading
+                ? "Carregando..."
+                : isSignUp
+                ? "Criar Conta"
+                : "Entrar"}
             </Button>
 
             <Button
@@ -105,8 +117,8 @@ export default function Login() {
               className="w-full"
               onClick={() => setIsSignUp(!isSignUp)}
             >
-              {isSignUp 
-                ? "Já tem uma conta? Faça login" 
+              {isSignUp
+                ? "Já tem uma conta? Entre aqui"
                 : "Não tem uma conta? Cadastre-se"}
             </Button>
           </form>
