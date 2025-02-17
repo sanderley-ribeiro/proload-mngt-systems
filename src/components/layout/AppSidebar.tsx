@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, Package, Factory, Truck, FileText, Box, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, Factory, Truck, FileText, Box } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -10,11 +10,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 
 const menuItems = [
   {
@@ -52,8 +49,6 @@ const menuItems = [
 export function AppSidebar() {
   const location = useLocation();
   const isMobile = useIsMobile();
-  const { signOut } = useAuth();
-  const navigate = useNavigate();
 
   const handleItemClick = () => {
     if (isMobile) {
@@ -61,17 +56,6 @@ export function AppSidebar() {
       if (sidebarButton) {
         sidebarButton.click();
       }
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      toast.success("Logout realizado com sucesso!");
-      navigate("/login");
-    } catch (error) {
-      console.error("Error logging out:", error);
-      toast.error("Erro ao realizar logout");
     }
   };
 
@@ -100,17 +84,6 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              
-              <SidebarMenuItem>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start gap-2 hover:bg-accent focus:bg-accent"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Sair</span>
-                </Button>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
