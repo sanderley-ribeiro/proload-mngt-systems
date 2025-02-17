@@ -17,11 +17,14 @@ export function StockMovements() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("all_stock_movements_view")
-        .select("*");
-      // No need to add order as it's handled by the view's FIFO ordering
+        .select();
 
       if (error) throw error;
-      return data;
+
+      return data?.map(item => ({
+        ...item,
+        movement_type: item.movement_type as "input" | "output"
+      })) || [];
     },
   });
 

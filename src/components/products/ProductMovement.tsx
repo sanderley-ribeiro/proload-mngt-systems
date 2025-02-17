@@ -79,11 +79,15 @@ export default function ProductMovement() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("all_stock_movements_view")
-        .select("*")
+        .select()
         .order('movement_date', { ascending: false });
 
       if (error) throw error;
-      return data;
+
+      return data?.map(item => ({
+        ...item,
+        movement_type: item.movement_type as "input" | "output"
+      })) || [];
     },
   });
 

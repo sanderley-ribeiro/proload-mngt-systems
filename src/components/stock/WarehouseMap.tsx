@@ -16,11 +16,14 @@ export function WarehouseMap() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("warehouse_occupation_report")
-        .select("*");
-      // No need to add order as it's handled by the view's FIFO ordering
+        .select();
 
       if (error) throw error;
-      return data;
+
+      return data?.map(item => ({
+        ...item,
+        floor: item.floor || "N/A",
+      })) || [];
     },
   });
 

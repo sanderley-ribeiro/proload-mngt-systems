@@ -21,7 +21,7 @@ export function ProductSearch() {
     queryFn: async () => {
       const query = supabase
         .from("warehouse_occupation_report")
-        .select("*")
+        .select()
         .order("product_name");
 
       if (search) {
@@ -30,7 +30,11 @@ export function ProductSearch() {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+
+      return data.map(item => ({
+        ...item,
+        floor: item.floor || "N/A",
+      }));
     },
   });
 
