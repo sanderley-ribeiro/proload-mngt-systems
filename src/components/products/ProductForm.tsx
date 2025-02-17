@@ -13,18 +13,32 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Pencil, Trash2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Product {
   id: string;
   name: string;
-  barcode: string;
   unit: string;
   created_at: string;
 }
 
 export default function ProductForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
+  const queryClient = useQueryClient();
+
+  const { data: products, isError } = useQuery<Product[]>({
+    queryKey: ["products"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -32,44 +46,66 @@ export default function ProductForm() {
 
     const formData = new FormData(e.currentTarget);
     const productName = formData.get("name") as string;
+    const unit = formData.get("unit") as string;
 
     try {
-      // Verificar se já existe um produto com o mesmo nome
-      if (products.some(p => p.name === productName)) {
+      // Check if a product with the same name already exists
+      const { data: existingProducts } = await supabase
+        .from("products")
+        .select("id")
+        .eq("name", productName)
+        .limit(1);
+
+      if (existingProducts && existingProducts.length > 0) {
         toast.error("Já existe um produto cadastrado com este nome");
         return;
       }
 
-      const newProduct: Product = {
-        id: crypto.randomUUID(),
-        name: productName,
-        barcode: formData.get("barcode") as string,
-        unit: formData.get("unit") as string,
-        created_at: new Date().toISOString(),
-      };
+      const { error } = await supabase
+        .from("products")
+        .insert([{ name: productName, unit }]);
 
-      setProducts(prev => [newProduct, ...prev]);
+      if (error) throw error;
+
       toast.success("Produto cadastrado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["products"] });
       e.currentTarget.reset();
     } catch (error: any) {
-      toast.error("Erro ao cadastrar produto");
+      toast.error("Erro ao cadastrar produto: " + error.message);
+      console.error("Erro ao cadastrar produto:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDelete = (productId: string) => {
+  const handleDelete = async (productId: string) => {
     try {
-      setProducts(prev => prev.filter(p => p.id !== productId));
+      const { error } = await supabase
+        .from("products")
+        .delete()
+        .eq("id", productId);
+
+      if (error) throw error;
+
       toast.success("Produto excluído com sucesso!");
-    } catch (error) {
-      toast.error("Erro ao excluir produto");
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    } catch (error: any) {
+      toast.error("Erro ao excluir produto: " + error.message);
+      console.error("Erro ao excluir produto:", error);
     }
   };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
   };
+
+  if (isError) {
+    return (
+      <div className="text-center py-4 text-red-600">
+        Erro ao carregar produtos. Por favor, recarregue a página.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -78,11 +114,6 @@ export default function ProductForm() {
           <div className="space-y-2">
             <Label htmlFor="name">Nome do Produto</Label>
             <Input id="name" name="name" required />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="barcode">Código de Barras</Label>
-            <Input id="barcode" name="barcode" required />
           </div>
           
           <div className="space-y-2">
@@ -101,17 +132,15 @@ export default function ProductForm() {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>Código de Barras</TableHead>
               <TableHead>Unidade</TableHead>
               <TableHead>Data de Cadastro</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products.map((product) => (
+            {products?.map((product) => (
               <TableRow key={product.id}>
                 <TableCell>{product.name}</TableCell>
-                <TableCell>{product.barcode}</TableCell>
                 <TableCell>{product.unit}</TableCell>
                 <TableCell>{formatDate(product.created_at)}</TableCell>
                 <TableCell className="text-right space-x-2">
@@ -135,6 +164,13 @@ export default function ProductForm() {
                 </TableCell>
               </TableRow>
             ))}
+            {!products?.length && (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-4">
+                  Nenhum produto cadastrado
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>

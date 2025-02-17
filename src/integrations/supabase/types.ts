@@ -9,6 +9,74 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      product_movements: {
+        Row: {
+          created_by: string
+          floor: string | null
+          id: string
+          movement_date: string
+          notes: string | null
+          position_number: number | null
+          product_id: string
+          quantity: number
+          type: string
+        }
+        Insert: {
+          created_by: string
+          floor?: string | null
+          id?: string
+          movement_date?: string
+          notes?: string | null
+          position_number?: number | null
+          product_id: string
+          quantity: number
+          type: string
+        }
+        Update: {
+          created_by?: string
+          floor?: string | null
+          id?: string
+          movement_date?: string
+          notes?: string | null
+          position_number?: number | null
+          product_id?: string
+          quantity?: number
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -32,7 +100,42 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      all_stock_movements_view: {
+        Row: {
+          created_by_name: string | null
+          floor: string | null
+          id: string | null
+          movement_date: string | null
+          movement_type: string | null
+          notes: string | null
+          position_number: number | null
+          product_name: string | null
+          product_unit: string | null
+          quantity: number | null
+        }
+        Relationships: []
+      }
+      warehouse_occupation_report: {
+        Row: {
+          entry_date: string | null
+          floor: string | null
+          id: string | null
+          position_number: number | null
+          product_id: string | null
+          product_name: string | null
+          quantity: number | null
+          stored_by: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never
