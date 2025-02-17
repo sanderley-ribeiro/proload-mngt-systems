@@ -1,7 +1,5 @@
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,66 +10,34 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
+
+// Mock de produtos para demonstração
+const mockProducts = [
+  { id: "1", name: "Produto 1" },
+  { id: "2", name: "Produto 2" },
+  { id: "3", name: "Produto 3" },
+];
 
 export function AddStockItem() {
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState("");
-  const queryClient = useQueryClient();
-  const { user } = useAuth(); // Usando o contexto de autenticação
+  const [isLoading, setIsLoading] = useState(false);
 
-  const { data: products } = useQuery({
-    queryKey: ["products"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("name");
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { mutate: addItem, isPending } = useMutation({
-    mutationFn: async () => {
-      if (!user?.id) {
-        throw new Error("Usuário não autenticado");
-      }
-
-      // Primeiro, encontrar a melhor posição usando a função do banco
-      const { data: positionId, error: positionError } = await supabase
-        .rpc("find_best_position", { product_id: productId });
-
-      if (positionError) throw positionError;
-
-      // Depois, inserir a ocupação
-      const { error: occupationError } = await supabase
-        .from("warehouse_occupations")
-        .insert({
-          position_id: positionId,
-          product_id: productId,
-          quantity: parseInt(quantity),
-          created_by: user.id
-        });
-
-      if (occupationError) throw occupationError;
-    },
-    onSuccess: () => {
-      toast.success("Produto adicionado ao estoque com sucesso!");
-      setProductId("");
-      setQuantity("");
-      // Invalidar todas as queries relacionadas ao estoque
-      queryClient.invalidateQueries({ queryKey: ["warehouse-positions"] });
-      queryClient.invalidateQueries({ queryKey: ["warehouse-products"] });
-      queryClient.invalidateQueries({ queryKey: ["warehouse-movements"] });
-      queryClient.invalidateQueries({ queryKey: ["warehouse-occupation-report"] });
-    },
-    onError: (error) => {
+  const handleAddItem = () => {
+    setIsLoading(true);
+    try {
+      // Simulando adição ao estoque
+      setTimeout(() => {
+        toast.success("Produto adicionado ao estoque com sucesso!");
+        setProductId("");
+        setQuantity("");
+        setIsLoading(false);
+      }, 1000);
+    } catch (error) {
       toast.error("Erro ao adicionar produto ao estoque");
-      console.error(error);
-    },
-  });
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-md space-y-4">
@@ -82,7 +48,7 @@ export function AddStockItem() {
             <SelectValue placeholder="Selecione um produto" />
           </SelectTrigger>
           <SelectContent>
-            {products?.map((product) => (
+            {mockProducts.map((product) => (
               <SelectItem key={product.id} value={product.id}>
                 {product.name}
               </SelectItem>
@@ -102,10 +68,10 @@ export function AddStockItem() {
       </div>
 
       <Button 
-        onClick={() => addItem()}
-        disabled={!productId || !quantity || isPending}
+        onClick={handleAddItem}
+        disabled={!productId || !quantity || isLoading}
       >
-        Adicionar ao Estoque
+        {isLoading ? "Adicionando..." : "Adicionar ao Estoque"}
       </Button>
     </div>
   );
