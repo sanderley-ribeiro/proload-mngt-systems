@@ -138,7 +138,15 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      get_next_warehouse_position: {
+        Args: {
+          p_product_id: string
+        }
+        Returns: {
+          floor: string
+          position_number: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

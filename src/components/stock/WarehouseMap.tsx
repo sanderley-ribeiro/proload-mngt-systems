@@ -16,8 +16,8 @@ export function WarehouseMap() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("warehouse_occupation_report")
-        .select("*")
-        .order("floor");
+        .select("*");
+      // No need to add order as it's handled by the view's FIFO ordering
 
       if (error) throw error;
       return data;
@@ -56,6 +56,11 @@ export function WarehouseMap() {
                           }`}
                       >
                         <div className="text-sm font-medium">{position}</div>
+                        {occupation && (
+                          <div className="text-xs truncate mt-1">
+                            {occupation.product_name}
+                          </div>
+                        )}
                       </Card>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -67,6 +72,10 @@ export function WarehouseMap() {
                             Entrada:{" "}
                             {new Date(occupation.entry_date).toLocaleDateString()}
                           </p>
+                          <p>Posição: {floor}-{position}</p>
+                          {occupation.stored_by && (
+                            <p>Responsável: {occupation.stored_by}</p>
+                          )}
                         </div>
                       ) : (
                         <p className="text-sm">Posição vazia</p>
