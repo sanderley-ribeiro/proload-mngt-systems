@@ -1,11 +1,11 @@
 
-import { LayoutDashboard, Package, Factory, Truck, FileText, Box } from "lucide-react";
+import { LayoutDashboard, Package, Truck, FileText, Box } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
-  SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarGroupContent,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -23,11 +23,6 @@ const menuItems = [
     title: "Produtos",
     path: "/products",
     icon: Package,
-  },
-  {
-    title: "Produção",
-    path: "/production",
-    icon: Factory,
   },
   {
     title: "Carregamento",

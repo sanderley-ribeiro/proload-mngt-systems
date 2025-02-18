@@ -10,31 +10,63 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-// Mock de produtos para demonstração
-const mockProducts = [
-  { id: "1", name: "Produto 1" },
-  { id: "2", name: "Produto 2" },
-  { id: "3", name: "Produto 3" },
-];
+interface Product {
+  id: string;
+  name: string;
+  unit: string;
+}
 
 export function AddStockItem() {
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  const handleAddItem = () => {
+  const { data: products } = useQuery<Product[]>({
+    queryKey: ["products"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, unit")
+        .order("name");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const handleAddItem = async () => {
+    if (!productId || !quantity) {
+      toast.error("Preencha todos os campos");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // Simulando adição ao estoque
-      setTimeout(() => {
-        toast.success("Produto adicionado ao estoque com sucesso!");
-        setProductId("");
-        setQuantity("");
-        setIsLoading(false);
-      }, 1000);
-    } catch (error) {
-      toast.error("Erro ao adicionar produto ao estoque");
+      const { error } = await supabase
+        .from("product_movements")
+        .insert([{
+          product_id: productId,
+          type: "input",
+          quantity: Number(quantity),
+        }]);
+
+      if (error) throw error;
+
+      toast.success("Produto adicionado ao estoque com sucesso!");
+      setProductId("");
+      setQuantity("");
+      
+      // Atualizar os dados em todas as visualizações relevantes
+      queryClient.invalidateQueries({ queryKey: ["warehouse-occupation-report"] });
+      queryClient.invalidateQueries({ queryKey: ["stock-movements"] });
+    } catch (error: any) {
+      toast.error("Erro ao adicionar produto ao estoque: " + error.message);
+      console.error("Erro ao adicionar produto:", error);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -48,9 +80,9 @@ export function AddStockItem() {
             <SelectValue placeholder="Selecione um produto" />
           </SelectTrigger>
           <SelectContent>
-            {mockProducts.map((product) => (
+            {products?.map((product) => (
               <SelectItem key={product.id} value={product.id}>
-                {product.name}
+                {product.name} ({product.unit})
               </SelectItem>
             ))}
           </SelectContent>
@@ -64,12 +96,14 @@ export function AddStockItem() {
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
           min="1"
+          step="0.01"
         />
       </div>
 
       <Button 
         onClick={handleAddItem}
         disabled={!productId || !quantity || isLoading}
+        className="w-full"
       >
         {isLoading ? "Adicionando..." : "Adicionar ao Estoque"}
       </Button>

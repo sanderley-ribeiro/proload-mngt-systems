@@ -80,6 +80,21 @@ export default function ProductForm() {
 
   const handleDelete = async (productId: string) => {
     try {
+      // Primeiro verificamos se o produto está em uso
+      const { data: movements, error: movementsError } = await supabase
+        .from("product_movements")
+        .select("id")
+        .eq("product_id", productId)
+        .limit(1);
+
+      if (movementsError) throw movementsError;
+
+      if (movements && movements.length > 0) {
+        toast.error("Não é possível excluir um produto que já possui movimentações");
+        return;
+      }
+
+      // Se não estiver em uso, podemos excluir
       const { error } = await supabase
         .from("products")
         .delete()
