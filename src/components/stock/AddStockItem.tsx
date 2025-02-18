@@ -46,13 +46,20 @@ export function AddStockItem() {
 
     setIsLoading(true);
     try {
+      // Get the current user's ID from the session
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("Usuário não autenticado");
+      }
+
       const { error } = await supabase
         .from("product_movements")
-        .insert([{
+        .insert({
           product_id: productId,
           type: "input",
           quantity: Number(quantity),
-        }]);
+          created_by: user.id
+        });
 
       if (error) throw error;
 
