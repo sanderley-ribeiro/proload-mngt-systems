@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,7 +60,6 @@ export default function ProductForm() {
     const unit = formData.get("unit") as string;
 
     try {
-      // Check if a product with the same name already exists
       const { data: existingProducts } = await supabase
         .from("products")
         .select("id")
@@ -90,36 +88,41 @@ export default function ProductForm() {
     }
   };
 
-  const handleDelete = async (product: Product) => {
+  const handleDelete = async (productId: string) => {
     try {
-      // Primeiro verificamos se o produto está em uso
+      console.log("Deletando produto:", productId);
+
       const { data: movements, error: movementsError } = await supabase
         .from("product_movements")
         .select("id")
-        .eq("product_id", product.id)
+        .eq("product_id", productId)
         .limit(1);
 
-      if (movementsError) throw movementsError;
+      if (movementsError) {
+        console.error("Erro ao verificar movimentações:", movementsError);
+        throw movementsError;
+      }
 
       if (movements && movements.length > 0) {
         toast.error("Não é possível excluir um produto que já possui movimentações");
         return;
       }
 
-      // Se não estiver em uso, podemos excluir
       const { error } = await supabase
         .from("products")
         .delete()
-        .eq("id", product.id);
+        .eq("id", productId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao deletar:", error);
+        throw error;
+      }
 
       toast.success("Produto excluído com sucesso!");
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      setDeletingProduct(null);
+      await queryClient.invalidateQueries({ queryKey: ["products"] });
     } catch (error: any) {
+      console.error("Erro completo:", error);
       toast.error("Erro ao excluir produto: " + error.message);
-      console.error("Erro ao excluir produto:", error);
     }
   };
 
@@ -187,7 +190,6 @@ export default function ProductForm() {
                         size="icon"
                         variant="ghost"
                         className="text-destructive hover:text-destructive"
-                        onClick={() => setDeletingProduct(product)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -200,11 +202,11 @@ export default function ProductForm() {
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel onClick={() => setDeletingProduct(null)}>
+                        <AlertDialogCancel>
                           Cancelar
                         </AlertDialogCancel>
                         <AlertDialogAction
-                          onClick={() => handleDelete(product)}
+                          onClick={() => handleDelete(product.id)}
                           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
                           Excluir
