@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,7 +36,6 @@ interface Product {
 
 export default function ProductForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
   const queryClient = useQueryClient();
 
   const { data: products, isError } = useQuery<Product[]>({
@@ -118,8 +118,15 @@ export default function ProductForm() {
         throw error;
       }
 
-      toast.success("Produto excluído com sucesso!");
+      // Atualiza o cache local imediatamente
+      queryClient.setQueryData<Product[]>(["products"], (oldData) => {
+        return oldData?.filter(product => product.id !== productId) ?? [];
+      });
+
+      // Invalida a query para buscar dados atualizados do servidor
       await queryClient.invalidateQueries({ queryKey: ["products"] });
+      
+      toast.success("Produto excluído com sucesso!");
     } catch (error: any) {
       console.error("Erro completo:", error);
       toast.error("Erro ao excluir produto: " + error.message);
