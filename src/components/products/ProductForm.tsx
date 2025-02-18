@@ -15,6 +15,17 @@ import {
 import { Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Product {
   id: string;
@@ -25,6 +36,7 @@ interface Product {
 
 export default function ProductForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
   const queryClient = useQueryClient();
 
   const { data: products, isError } = useQuery<Product[]>({
@@ -78,13 +90,13 @@ export default function ProductForm() {
     }
   };
 
-  const handleDelete = async (productId: string) => {
+  const handleDelete = async (product: Product) => {
     try {
       // Primeiro verificamos se o produto está em uso
       const { data: movements, error: movementsError } = await supabase
         .from("product_movements")
         .select("id")
-        .eq("product_id", productId)
+        .eq("product_id", product.id)
         .limit(1);
 
       if (movementsError) throw movementsError;
@@ -98,12 +110,13 @@ export default function ProductForm() {
       const { error } = await supabase
         .from("products")
         .delete()
-        .eq("id", productId);
+        .eq("id", product.id);
 
       if (error) throw error;
 
       toast.success("Produto excluído com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      setDeletingProduct(null);
     } catch (error: any) {
       toast.error("Erro ao excluir produto: " + error.message);
       console.error("Erro ao excluir produto:", error);
@@ -168,14 +181,37 @@ export default function ProductForm() {
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button
-                    onClick={() => handleDelete(product.id)}
-                    size="icon"
-                    variant="ghost"
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setDeletingProduct(product)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja excluir o produto "{product.name}"? Esta ação não poderá ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setDeletingProduct(null)}>
+                          Cancelar
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDelete(product)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Excluir
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </TableCell>
               </TableRow>
             ))}
