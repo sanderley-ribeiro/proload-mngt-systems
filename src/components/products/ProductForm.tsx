@@ -26,6 +26,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface Product {
   id: string;
@@ -36,6 +43,7 @@ interface Product {
 
 export default function ProductForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const queryClient = useQueryClient();
 
   const { data: products, isError } = useQuery<Product[]>({
@@ -85,6 +93,44 @@ export default function ProductForm() {
       console.error("Erro ao cadastrar produto:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleEdit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+
+    const formData = new FormData(e.currentTarget);
+    const newName = formData.get("edit-name") as string;
+    const newUnit = formData.get("edit-unit") as string;
+
+    try {
+      // Verifica se já existe outro produto com o mesmo nome
+      const { data: existingProducts } = await supabase
+        .from("products")
+        .select("id")
+        .eq("name", newName)
+        .neq("id", editingProduct.id)
+        .limit(1);
+
+      if (existingProducts && existingProducts.length > 0) {
+        toast.error("Já existe outro produto cadastrado com este nome");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("products")
+        .update({ name: newName, unit: newUnit })
+        .eq("id", editingProduct.id);
+
+      if (error) throw error;
+
+      toast.success("Produto atualizado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      setEditingProduct(null);
+    } catch (error: any) {
+      toast.error("Erro ao atualizar produto: " + error.message);
+      console.error("Erro ao atualizar produto:", error);
     }
   };
 
@@ -183,9 +229,7 @@ export default function ProductForm() {
                 <TableCell>{formatDate(product.created_at)}</TableCell>
                 <TableCell className="text-right space-x-2">
                   <Button
-                    onClick={() => {
-                      toast.message("Funcionalidade de edição será implementada em breve");
-                    }}
+                    onClick={() => setEditingProduct(product)}
                     size="icon"
                     variant="ghost"
                   >
@@ -234,6 +278,47 @@ export default function ProductForm() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={!!editingProduct} onOpenChange={(open) => !open && setEditingProduct(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Produto</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEdit} className="space-y-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Nome do Produto</Label>
+                <Input 
+                  id="edit-name" 
+                  name="edit-name" 
+                  defaultValue={editingProduct?.name}
+                  required 
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-unit">Unidade de Medida</Label>
+                <Input 
+                  id="edit-unit" 
+                  name="edit-unit" 
+                  defaultValue={editingProduct?.unit}
+                  placeholder="ex: kg, litros, unidades" 
+                  required 
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditingProduct(null)}>
+                Cancelar
+              </Button>
+              <Button type="submit">
+                Salvar Alterações
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
