@@ -19,6 +19,11 @@ interface Product {
   unit: string;
 }
 
+interface WarehousePosition {
+  floor: string;
+  position_number: number;
+}
+
 export function AddStockItem() {
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -46,22 +51,39 @@ export function AddStockItem() {
 
     setIsLoading(true);
     try {
-      // Get the current user's ID from the session
+      // Obter o usuário atual
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error("Usuário não autenticado");
       }
 
-      const { error } = await supabase
+      // Obter a próxima posição disponível no armazém
+      const { data: positions, error: positionError } = await supabase
+        .rpc('get_next_warehouse_position', {
+          p_product_id: productId
+        });
+
+      if (positionError) throw positionError;
+
+      if (!positions || positions.length === 0 || !positions[0].floor) {
+        throw new Error("Não há posições disponíveis no armazém");
+      }
+
+      const position = positions[0];
+
+      // Inserir o movimento com a posição obtida
+      const { error: movementError } = await supabase
         .from("product_movements")
         .insert({
           product_id: productId,
           type: "input",
           quantity: Number(quantity),
-          created_by: user.id
+          created_by: user.id,
+          floor: position.floor,
+          position_number: position.position_number
         });
 
-      if (error) throw error;
+      if (movementError) throw movementError;
 
       toast.success("Produto adicionado ao estoque com sucesso!");
       setProductId("");
