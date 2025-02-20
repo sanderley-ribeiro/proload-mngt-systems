@@ -1,43 +1,27 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AuthForm } from "@/components/auth/AuthForm";
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { UpdateProfile } from "@/components/auth/UpdateProfile";
+import { useAuth } from "@/providers/AuthProvider";
 
 export default function Auth() {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate("/");
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        navigate("/");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+  const { user } = useAuth();
 
   return (
-    <div className="container relative flex-col items-center justify-center h-screen max-w-lg py-20">
-      <Card className="border-2">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">
-            Bem-vindo ao Sistema
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AuthForm />
-        </CardContent>
-      </Card>
+    <div className="container relative h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-1 lg:px-0">
+      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+        <div className="flex flex-col space-y-2 text-center">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {user ? "Atualize seu Perfil" : "Acesse sua Conta"}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {user
+              ? "Insira seu nome para identificação nas movimentações"
+              : "Entre com seu email e senha para acessar"}
+          </p>
+        </div>
+
+        {user ? <UpdateProfile /> : <AuthForm />}
+      </div>
     </div>
   );
 }
