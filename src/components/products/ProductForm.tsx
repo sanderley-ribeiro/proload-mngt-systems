@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -105,7 +104,6 @@ export default function ProductForm() {
     const newUnit = formData.get("edit-unit") as string;
 
     try {
-      // Verifica se já existe outro produto com o mesmo nome
       const { data: existingProducts } = await supabase
         .from("products")
         .select("id")
@@ -154,22 +152,21 @@ export default function ProductForm() {
         return;
       }
 
-      const { error } = await supabase
+      const { error: deleteError } = await supabase
         .from("products")
         .delete()
         .eq("id", productId);
 
-      if (error) {
-        console.error("Erro ao deletar:", error);
-        throw error;
+      if (deleteError) {
+        console.error("Erro ao deletar:", deleteError);
+        throw deleteError;
       }
 
-      // Atualiza o cache local imediatamente
       queryClient.setQueryData<Product[]>(["products"], (oldData) => {
-        return oldData?.filter(product => product.id !== productId) ?? [];
+        if (!oldData) return [];
+        return oldData.filter(product => product.id !== productId);
       });
 
-      // Invalida a query para buscar dados atualizados do servidor
       await queryClient.invalidateQueries({ queryKey: ["products"] });
       
       toast.success("Produto excluído com sucesso!");
@@ -253,9 +250,7 @@ export default function ProductForm() {
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>
-                          Cancelar
-                        </AlertDialogCancel>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
                         <AlertDialogAction
                           onClick={() => handleDelete(product.id)}
                           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
