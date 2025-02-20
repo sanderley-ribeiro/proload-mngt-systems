@@ -24,7 +24,7 @@ const AppLayout = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
-        <main className="flex-1 overflow-hidden px-4 py-6">
+        <main className="flex-1 overflow-hidden p-2 md:px-4 md:py-6">
           <div className="flex justify-between items-center mb-4">
             <SidebarTrigger className="hover:bg-accent p-2 rounded-md transition-colors duration-200" />
             <Button
@@ -34,7 +34,7 @@ const AppLayout = () => {
               className="gap-2"
             >
               <LogOut className="h-4 w-4" />
-              Sair
+              <span className="hidden sm:inline">Sair</span>
             </Button>
           </div>
           <div className="container mx-auto animate-fade-in">
@@ -44,6 +44,6 @@ const AppLayout = () => {
       </div>
     </SidebarProvider>
   );
-};
+}
 
 export default AppLayout;

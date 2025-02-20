@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -191,7 +192,7 @@ export default function ProductForm() {
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="name">Nome do Produto</Label>
             <Input id="name" name="name" required />
@@ -208,22 +209,22 @@ export default function ProductForm() {
         </Button>
       </form>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Unidade</TableHead>
-              <TableHead>Data de Cadastro</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead className="whitespace-nowrap">Nome</TableHead>
+              <TableHead className="whitespace-nowrap">Unidade</TableHead>
+              <TableHead className="whitespace-nowrap">Data de Cadastro</TableHead>
+              <TableHead className="text-right whitespace-nowrap">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {products?.map((product) => (
               <TableRow key={product.id}>
-                <TableCell>{product.name}</TableCell>
+                <TableCell className="font-medium">{product.name}</TableCell>
                 <TableCell>{product.unit}</TableCell>
-                <TableCell>{formatDate(product.created_at)}</TableCell>
+                <TableCell className="hidden md:table-cell">{formatDate(product.created_at)}</TableCell>
                 <TableCell className="text-right space-x-2">
                   <Button
                     onClick={() => setEditingProduct(product)}
@@ -242,18 +243,18 @@ export default function ProductForm() {
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="max-w-[90vw] md:max-w-lg">
                       <AlertDialogHeader>
                         <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
                         <AlertDialogDescription>
                           Tem certeza que deseja excluir o produto "{product.name}"? Esta ação não poderá ser desfeita.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogFooter className="flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+                        <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
                         <AlertDialogAction
                           onClick={() => handleDelete(product.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          className="w-full sm:w-auto bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
                           Excluir
                         </AlertDialogAction>
@@ -275,7 +276,7 @@ export default function ProductForm() {
       </div>
 
       <Dialog open={!!editingProduct} onOpenChange={(open) => !open && setEditingProduct(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-[90vw] md:max-w-lg">
           <DialogHeader>
             <DialogTitle>Editar Produto</DialogTitle>
           </DialogHeader>
@@ -303,11 +304,16 @@ export default function ProductForm() {
               </div>
             </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditingProduct(null)}>
+            <DialogFooter className="flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setEditingProduct(null)}
+                className="w-full sm:w-auto"
+              >
                 Cancelar
               </Button>
-              <Button type="submit">
+              <Button type="submit" className="w-full sm:w-auto">
                 Salvar Alterações
               </Button>
             </DialogFooter>

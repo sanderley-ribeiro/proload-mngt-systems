@@ -4,20 +4,23 @@ import { WarehouseMap } from "@/components/stock/WarehouseMap";
 import { ProductSearch } from "@/components/stock/ProductSearch";
 import { StockMovements } from "@/components/stock/StockMovements";
 import { AddStockItem } from "@/components/stock/AddStockItem";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Stock = () => {
+  const isMobile = useIsMobile();
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Controle de Estoque</h1>
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Controle de Estoque</h1>
       </div>
 
       <Tabs defaultValue="map" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="map">Mapa do Armazém</TabsTrigger>
-          <TabsTrigger value="search">Buscar Produtos</TabsTrigger>
-          <TabsTrigger value="movements">Movimentações</TabsTrigger>
-          <TabsTrigger value="add">Adicionar Item</TabsTrigger>
+        <TabsList className="w-full h-auto flex flex-wrap gap-2 md:h-10 md:flex-nowrap">
+          <TabsTrigger value="map" className="flex-1">Mapa do Armazém</TabsTrigger>
+          <TabsTrigger value="search" className="flex-1">Buscar Produtos</TabsTrigger>
+          <TabsTrigger value="movements" className="flex-1">Movimentações</TabsTrigger>
+          <TabsTrigger value="add" className="flex-1">Adicionar Item</TabsTrigger>
         </TabsList>
 
         <TabsContent value="map" className="space-y-4">
