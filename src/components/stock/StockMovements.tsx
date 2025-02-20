@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { StockMovement } from "@/types/warehouse";
+import { format } from "date-fns";
 
 export function StockMovements() {
   const { data: movements, isLoading } = useQuery<StockMovement[]>({
@@ -17,7 +18,8 @@ export function StockMovements() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("all_stock_movements_view")
-        .select();
+        .select()
+        .order('movement_date', { ascending: false });
 
       if (error) throw error;
 
@@ -50,7 +52,7 @@ export function StockMovements() {
           {movements?.map((movement) => (
             <TableRow key={movement.id}>
               <TableCell>
-                {new Date(movement.movement_date).toLocaleString()}
+                {format(new Date(movement.movement_date), "dd/MM/yyyy HH:mm")}
               </TableCell>
               <TableCell>
                 {movement.product_name} ({movement.product_unit})
