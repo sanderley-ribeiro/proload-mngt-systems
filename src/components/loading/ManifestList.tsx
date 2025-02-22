@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FileText, Trash2 } from "lucide-react";
+import { FileText, Pencil, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -183,7 +183,7 @@ export default function ManifestList() {
             <TableHead>Produtos</TableHead>
             <TableHead>Quantidade Total</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="w-[100px]">Ações</TableHead>
+            <TableHead className="w-[150px]">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -202,33 +202,36 @@ export default function ManifestList() {
                   {getStatusText(manifest.status)}
                 </Badge>
               </TableCell>
-              <TableCell className="flex gap-2">
-                {manifest.status === "em aberto" ? (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => navigate(`/loading/${manifest.id}/scan`)}
-                    >
-                      <FileText className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(manifest.id, manifest.status)}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                  </>
-                ) : (
+              <TableCell>
+                <div className="flex items-center gap-2">
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(manifest.id, manifest.status)}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/loading/${manifest.id}/scan`)}
                   >
-                    <Trash2 className="h-4 w-4 text-red-500" />
+                    <FileText className="h-4 w-4 mr-1" />
+                    Acessar
                   </Button>
-                )}
+                  
+                  {manifest.status === "em aberto" && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => navigate(`/loading/${manifest.id}/edit`)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(manifest.id, manifest.status)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </>
+                  )}
+                </div>
               </TableCell>
             </TableRow>
           ))}
