@@ -13,7 +13,7 @@ import Products from "./pages/Products";
 import Stock from "./pages/Stock";
 import Loading from "./pages/Loading";
 import ManifestScanning from "./pages/ManifestScanning";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
 import "./App.css";
 
