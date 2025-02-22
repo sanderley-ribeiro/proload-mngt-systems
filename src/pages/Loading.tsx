@@ -4,6 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ManifestForm from "@/components/loading/ManifestForm";
 import ManifestList from "@/components/loading/ManifestList";
 
+interface ManifestFormProps {
+  manifestId?: string;
+}
+
 const Loading = () => {
   const { id } = useParams();
   const isEditMode = !!id;
