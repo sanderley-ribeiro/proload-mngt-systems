@@ -1,7 +1,7 @@
 
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FileText, Pencil, Trash2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { FileEdit, Scan, Trash2 } from "lucide-react";
 
 interface ManifestActionsProps {
   manifestId: string;
@@ -10,37 +10,40 @@ interface ManifestActionsProps {
 }
 
 export function ManifestActions({ manifestId, status, onDelete }: ManifestActionsProps) {
-  const navigate = useNavigate();
+  const isFinalized = status === "finalizado";
 
   return (
     <div className="flex items-center gap-2">
       <Button
         variant="outline"
-        size="sm"
-        onClick={() => navigate(`/loading/${manifestId}/scan`)}
+        size="icon"
+        asChild
+        disabled={isFinalized}
       >
-        <FileText className="h-4 w-4 mr-1" />
-        Acessar
+        <Link to={`/loading/${manifestId}/scan`}>
+          <Scan className="h-4 w-4" />
+        </Link>
       </Button>
-      
-      {status === "em aberto" && (
-        <>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(`/loading/${manifestId}/edit`)}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onDelete(manifestId, status)}
-          >
-            <Trash2 className="h-4 w-4 text-red-500" />
-          </Button>
-        </>
-      )}
+
+      <Button
+        variant="outline"
+        size="icon"
+        asChild
+        disabled={isFinalized}
+      >
+        <Link to={`/loading/${manifestId}/edit`}>
+          <FileEdit className="h-4 w-4" />
+        </Link>
+      </Button>
+
+      <Button
+        variant="outline"
+        size="icon"
+        disabled={isFinalized}
+        onClick={() => onDelete(manifestId, status)}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
     </div>
   );
 }

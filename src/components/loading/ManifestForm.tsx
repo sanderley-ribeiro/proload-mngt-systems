@@ -19,7 +19,11 @@ interface ManifestItem {
   quantity: number;
 }
 
-export default function ManifestForm() {
+interface ManifestFormProps {
+  manifestId?: string;
+}
+
+export default function ManifestForm({ manifestId }: ManifestFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [items, setItems] = useState<ManifestItem[]>([]);
   const { toast } = useToast();
