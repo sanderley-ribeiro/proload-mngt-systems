@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -9,10 +9,17 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+interface Profile {
+  id: string;
+  name: string | null;
+  is_admin: boolean;
+  user_permissions: { permission: string }[];
+}
+
 interface ProfileDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  profile?: any;
+  profile?: Profile | null;
 }
 
 const PERMISSIONS = [
@@ -22,14 +29,28 @@ const PERMISSIONS = [
   { value: "loading", label: "Romaneios" },
   { value: "reports", label: "Relatórios" },
   { value: "users_admin", label: "Administração de Usuários" },
-];
+] as const;
+
+type Permission = typeof PERMISSIONS[number]["value"];
 
 export function ProfileDialog({ open, onOpenChange, profile }: ProfileDialogProps) {
   const [loading, setLoading] = useState(false);
-  const [selectedPermissions, setSelectedPermissions] = useState<string[]>(
-    profile?.user_permissions?.map((p: any) => p.permission) || []
-  );
+  const [selectedPermissions, setSelectedPermissions] = useState<Permission[]>([]);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (profile) {
+      setSelectedPermissions(
+        profile.user_permissions
+          .map((p) => p.permission as Permission)
+          .filter((p): p is Permission => 
+            PERMISSIONS.map(perm => perm.value).includes(p)
+          )
+      );
+    } else {
+      setSelectedPermissions([]);
+    }
+  }, [profile]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -54,6 +75,8 @@ export function ProfileDialog({ open, onOpenChange, profile }: ProfileDialogProp
         profileId = authData.user?.id;
       }
 
+      if (!profileId) throw new Error("ID do perfil não encontrado");
+
       // Atualizar perfil
       const { error: profileError } = await supabase
         .from("profiles")
@@ -65,27 +88,26 @@ export function ProfileDialog({ open, onOpenChange, profile }: ProfileDialogProp
 
       if (profileError) throw profileError;
 
-      // Atualizar permissões
-      if (profileId) {
-        // Remover permissões antigas
-        await supabase
+      // Remover permissões antigas
+      if (selectedPermissions.length > 0) {
+        const { error: deleteError } = await supabase
           .from("user_permissions")
           .delete()
           .eq("profile_id", profileId);
 
-        // Inserir novas permissões
-        if (selectedPermissions.length > 0) {
-          const { error: permissionsError } = await supabase
-            .from("user_permissions")
-            .insert(
-              selectedPermissions.map((permission) => ({
-                profile_id: profileId,
-                permission,
-              }))
-            );
+        if (deleteError) throw deleteError;
 
-          if (permissionsError) throw permissionsError;
-        }
+        // Inserir novas permissões
+        const permissionsData = selectedPermissions.map(permission => ({
+          profile_id: profileId,
+          permission: permission,
+        }));
+
+        const { error: insertError } = await supabase
+          .from("user_permissions")
+          .insert(permissionsData);
+
+        if (insertError) throw insertError;
       }
 
       toast.success(

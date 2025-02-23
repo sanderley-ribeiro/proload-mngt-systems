@@ -24,9 +24,17 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+interface Profile {
+  id: string;
+  name: string | null;
+  is_admin: boolean;
+  created_at: string;
+  user_permissions: { permission: string }[];
+}
+
 interface UserProfileProps {
-  profile: any;
-  onEdit: (profile: any) => void;
+  profile: Profile;
+  onEdit: (profile: Profile) => void;
 }
 
 export function UserProfile({ profile, onEdit }: UserProfileProps) {
@@ -49,7 +57,7 @@ export function UserProfile({ profile, onEdit }: UserProfileProps) {
     },
   });
 
-  const permissions = profile.user_permissions?.map((p: any) => p.permission) || [];
+  const permissions = profile.user_permissions?.map((p) => p.permission) || [];
 
   return (
     <Card>

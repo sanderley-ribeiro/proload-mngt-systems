@@ -81,18 +81,21 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_admin: boolean | null
           name: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           id: string
+          is_admin?: boolean | null
           name?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
+          is_admin?: boolean | null
           name?: string | null
           updated_at?: string
         }
@@ -181,6 +184,35 @@ export type Database = {
           },
         ]
       }
+      user_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          permission: Database["public"]["Enums"]["app_permission"]
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permission: Database["public"]["Enums"]["app_permission"]
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permission?: Database["public"]["Enums"]["app_permission"]
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_permissions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       all_stock_movements_view: {
@@ -232,7 +264,13 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_permission:
+        | "dashboard"
+        | "stock"
+        | "products"
+        | "loading"
+        | "reports"
+        | "users_admin"
     }
     CompositeTypes: {
       [_ in never]: never

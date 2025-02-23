@@ -2,17 +2,25 @@
 import { useAuth } from "@/providers/AuthProvider";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { UserProfile } from "./UserProfile";
+import { UserProfile } from "@/components/users/UserProfile";
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { ProfileDialog } from "@/components/users/ProfileDialog";
 
+interface Profile {
+  id: string;
+  name: string | null;
+  is_admin: boolean;
+  created_at: string;
+  user_permissions: { permission: string }[];
+}
+
 export default function Users() {
   const { user } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingProfile, setEditingProfile] = useState<any>(null);
+  const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
 
   // Verificar se o usuário atual é admin
   const { data: isAdmin, isLoading: checkingAdmin } = useQuery({
@@ -40,7 +48,7 @@ export default function Users() {
           )
         `);
       if (error) throw error;
-      return data;
+      return data as Profile[];
     },
     enabled: isAdmin,
   });
@@ -53,7 +61,7 @@ export default function Users() {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const handleEditProfile = (profile: any) => {
+  const handleEditProfile = (profile: Profile) => {
     setEditingProfile(profile);
     setIsDialogOpen(true);
   };
