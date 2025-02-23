@@ -12,6 +12,7 @@ interface Product {
   id: string;
   name: string;
   unit: string;
+  stock?: number;
 }
 
 interface ManifestItem {
@@ -30,16 +31,36 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
   const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null);
 
+  // Query para buscar produtos com seus saldos em estoque
   const { data: products } = useQuery({
-    queryKey: ["products"],
+    queryKey: ["products-with-stock"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Primeiro, busca todos os produtos
+      const { data: products, error: productsError } = await supabase
         .from("products")
         .select("id, name, unit")
         .order("name");
       
-      if (error) throw error;
-      return data as Product[];
+      if (productsError) throw productsError;
+
+      // Para cada produto, calcula o saldo em estoque
+      const productsWithStock = await Promise.all(products.map(async (product) => {
+        const { data: movements } = await supabase
+          .from("product_movements")
+          .select("type, quantity")
+          .eq("product_id", product.id);
+
+        // Calcula o saldo somando entradas e subtraindo saídas
+        const stock = movements?.reduce((acc, movement) => {
+          return movement.type === "input" 
+            ? acc + Number(movement.quantity) 
+            : acc - Number(movement.quantity);
+        }, 0) || 0;
+
+        return { ...product, stock };
+      }));
+
+      return productsWithStock as Product[];
     },
   });
 
@@ -120,6 +141,22 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
       ...newItems[index],
       [field]: value,
     };
+
+    // Se estiver atualizando a quantidade, verifica o saldo em estoque
+    if (field === "quantity") {
+      const item = newItems[index];
+      const product = products?.find(p => p.id === item.productId);
+      
+      if (product && Number(value) > (product.stock || 0)) {
+        toast({
+          title: "Quantidade indisponível",
+          description: `O produto ${product.name} possui apenas ${product.stock} unidades em estoque.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setItems(newItems);
   };
 
