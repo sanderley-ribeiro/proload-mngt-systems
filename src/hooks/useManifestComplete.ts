@@ -12,6 +12,7 @@ export function useManifestComplete(manifestId: string) {
     mutationFn: async () => {
       console.log("Attempting to finalize manifest:", manifestId);
       
+      // First, get the manifest data with items and product info
       const { data, error } = await supabase
         .from("shipping_manifests")
         .update({ status: "finalizado" })
@@ -20,6 +21,7 @@ export function useManifestComplete(manifestId: string) {
           number,
           shipping_manifest_items (
             quantity,
+            product_id,
             product:products (
               name
             )
@@ -30,6 +32,29 @@ export function useManifestComplete(manifestId: string) {
       if (error) {
         console.error("Error finalizing manifest:", error);
         throw error;
+      }
+
+      // Get user profile for the movement creation
+      const { data: profile } = await supabase.auth.getUser();
+      if (!profile.user) throw new Error("Usuário não autenticado");
+
+      // Create stock output movements for each item
+      const stockMovements = data.shipping_manifest_items.map(item => ({
+        product_id: item.product_id,
+        type: 'output',
+        quantity: item.quantity,
+        created_by: profile.user.id,
+        notes: `Saída por romaneio #${data.number}`
+      }));
+
+      // Insert all stock movements
+      const { error: movementError } = await supabase
+        .from('product_movements')
+        .insert(stockMovements);
+
+      if (movementError) {
+        console.error("Error creating stock movements:", movementError);
+        throw movementError;
       }
 
       console.log("Manifest finalized successfully:", data);
