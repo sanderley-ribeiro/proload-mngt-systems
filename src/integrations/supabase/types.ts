@@ -109,6 +109,8 @@ export type Database = {
           product_id: string
           quantity: number
           scanned_at: string[] | null
+          warehouse_floor: string | null
+          warehouse_position: number | null
         }
         Insert: {
           created_at?: string
@@ -117,6 +119,8 @@ export type Database = {
           product_id: string
           quantity: number
           scanned_at?: string[] | null
+          warehouse_floor?: string | null
+          warehouse_position?: number | null
         }
         Update: {
           created_at?: string
@@ -125,6 +129,8 @@ export type Database = {
           product_id?: string
           quantity?: number
           scanned_at?: string[] | null
+          warehouse_floor?: string | null
+          warehouse_position?: number | null
         }
         Relationships: [
           {
@@ -230,6 +236,25 @@ export type Database = {
         }
         Relationships: []
       }
+      oldest_warehouse_positions: {
+        Row: {
+          age_rank: number | null
+          available_quantity: number | null
+          entry_date: string | null
+          floor: string | null
+          position_number: number | null
+          product_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       warehouse_occupation_report: {
         Row: {
           entry_date: string | null
@@ -260,6 +285,16 @@ export type Database = {
         Returns: {
           floor: string
           position_number: number
+        }[]
+      }
+      get_oldest_position: {
+        Args: {
+          p_product_id: string
+        }
+        Returns: {
+          floor: string
+          position_number: number
+          available_quantity: number
         }[]
       }
     }

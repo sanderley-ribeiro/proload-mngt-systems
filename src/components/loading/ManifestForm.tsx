@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -37,11 +36,9 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
   const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Query para buscar produtos com seus saldos em estoque e posições
   const { data: products } = useQuery({
     queryKey: ["products-with-stock"],
     queryFn: async () => {
-      // Primeiro, busca todos os produtos
       const { data: products, error: productsError } = await supabase
         .from("products")
         .select("id, name, unit")
@@ -49,7 +46,6 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
       
       if (productsError) throw productsError;
 
-      // Para cada produto, busca a posição mais antiga e quantidade disponível
       const productsWithStock = await Promise.all(products.map(async (product) => {
         const { data: position } = await supabase
           .rpc('get_oldest_position', {
@@ -79,7 +75,6 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
       const { data: profile } = await supabase.auth.getUser();
       if (!profile.user) throw new Error("Usuário não autenticado");
 
-      // Criar o romaneio
       const { data: manifest, error: manifestError } = await supabase
         .from("shipping_manifests")
         .insert({
@@ -87,14 +82,13 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
           client_name: formData.get("client_name") as string,
           vehicle_plate: formData.get("vehicle_plate") as string,
           created_by: profile.user.id,
-          number: '0', // O número será gerado automaticamente pelo trigger
+          number: '0',
         })
         .select()
         .single();
 
       if (manifestError) throw manifestError;
 
-      // Inserir os itens do romaneio com suas posições
       const { error: itemsError } = await supabase
         .from("shipping_manifest_items")
         .insert(
@@ -109,14 +103,12 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
 
       if (itemsError) throw itemsError;
 
-      // Invalidar a query para atualizar a lista
       queryClient.invalidateQueries({ queryKey: ["manifests"] });
 
       toast({
         title: "Romaneio criado com sucesso!",
       });
-      
-      // Limpar o formulário usando a referência
+
       if (formRef.current) {
         formRef.current.reset();
       }
@@ -150,7 +142,6 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
       const product = products?.find(p => p.id === value);
       if (!product) return;
 
-      // Se não houver posição disponível, não permitir adicionar
       if (!product.warehouse_floor || !product.warehouse_position) {
         toast({
           title: "Produto indisponível",
