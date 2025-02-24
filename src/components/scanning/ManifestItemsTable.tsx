@@ -16,6 +16,8 @@ interface ManifestItem {
   product_id: string;
   quantity: number;
   scanned_at: string[] | null;
+  warehouse_floor: string | null;
+  warehouse_position: number | null;
   product: {
     name: string;
     unit: string;
@@ -55,6 +57,7 @@ export function ManifestItemsTable({
             <TableRow>
               <TableHead>Produto</TableHead>
               <TableHead>Unidade</TableHead>
+              <TableHead>Posição</TableHead>
               <TableHead className="text-right">Escaneado</TableHead>
               <TableHead className="text-right">Total</TableHead>
               <TableHead>Último Escaneamento</TableHead>
@@ -68,11 +71,15 @@ export function ManifestItemsTable({
               const lastScan = item.scanned_at?.length 
                 ? new Date(item.scanned_at[item.scanned_at.length - 1]).toLocaleString('pt-BR')
                 : '-';
+              const position = item.warehouse_floor && item.warehouse_position 
+                ? `${item.warehouse_floor}-${item.warehouse_position}`
+                : '-';
 
               return (
                 <TableRow key={item.id}>
                   <TableCell>{item.product.name}</TableCell>
                   <TableCell>{item.product.unit}</TableCell>
+                  <TableCell>{position}</TableCell>
                   <TableCell className="text-right font-medium">
                     <span
                       className={

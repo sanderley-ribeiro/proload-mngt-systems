@@ -22,6 +22,8 @@ export function useManifestComplete(manifestId: string) {
           shipping_manifest_items (
             quantity,
             product_id,
+            warehouse_floor,
+            warehouse_position,
             product:products (
               name
             )
@@ -38,12 +40,14 @@ export function useManifestComplete(manifestId: string) {
       const { data: profile } = await supabase.auth.getUser();
       if (!profile.user) throw new Error("Usuário não autenticado");
 
-      // Create stock output movements for each item
+      // Create stock output movements for each item with warehouse position
       const stockMovements = data.shipping_manifest_items.map(item => ({
         product_id: item.product_id,
         type: 'output',
         quantity: item.quantity,
         created_by: profile.user.id,
+        floor: item.warehouse_floor,
+        position_number: item.warehouse_position,
         notes: `Saída por romaneio #${data.number}`
       }));
 
@@ -63,7 +67,7 @@ export function useManifestComplete(manifestId: string) {
     onSuccess: (data) => {
       // Create a summary message of products that were deducted from stock
       const productSummary = data.shipping_manifest_items
-        .map(item => `${item.product.name}: ${item.quantity}`)
+        .map(item => `${item.product.name}: ${item.quantity} (${item.warehouse_floor}-${item.warehouse_position})`)
         .join(', ');
       
       toast.success(`Romaneio #${data.number} finalizado e estoque atualizado.`, {

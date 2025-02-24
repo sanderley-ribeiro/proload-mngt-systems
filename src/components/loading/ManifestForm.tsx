@@ -7,17 +7,23 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ManifestFormHeader from "./ManifestFormHeader";
 import ManifestItem from "./ManifestItem";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 interface Product {
   id: string;
   name: string;
   unit: string;
   stock?: number;
+  warehouse_floor?: string;
+  warehouse_position?: number;
+  available_quantity?: number;
 }
 
 interface ManifestItem {
   productId: string;
   quantity: number;
+  warehouse_floor?: string;
+  warehouse_position?: number;
 }
 
 interface ManifestFormProps {
@@ -31,7 +37,7 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
   const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Query para buscar produtos com seus saldos em estoque
+  // Query para buscar produtos com seus saldos em estoque e posições
   const { data: products } = useQuery({
     queryKey: ["products-with-stock"],
     queryFn: async () => {
@@ -43,21 +49,20 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
       
       if (productsError) throw productsError;
 
-      // Para cada produto, calcula o saldo em estoque
+      // Para cada produto, busca a posição mais antiga e quantidade disponível
       const productsWithStock = await Promise.all(products.map(async (product) => {
-        const { data: movements } = await supabase
-          .from("product_movements")
-          .select("type, quantity")
-          .eq("product_id", product.id);
+        const { data: position } = await supabase
+          .rpc('get_oldest_position', {
+            p_product_id: product.id
+          })
+          .single();
 
-        // Calcula o saldo somando entradas e subtraindo saídas
-        const stock = movements?.reduce((acc, movement) => {
-          return movement.type === "input" 
-            ? acc + Number(movement.quantity) 
-            : acc - Number(movement.quantity);
-        }, 0) || 0;
-
-        return { ...product, stock };
+        return { 
+          ...product, 
+          warehouse_floor: position?.floor,
+          warehouse_position: position?.position_number,
+          stock: position?.available_quantity || 0
+        };
       }));
 
       return productsWithStock as Product[];
@@ -89,7 +94,7 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
 
       if (manifestError) throw manifestError;
 
-      // Inserir os itens do romaneio
+      // Inserir os itens do romaneio com suas posições
       const { error: itemsError } = await supabase
         .from("shipping_manifest_items")
         .insert(
@@ -97,6 +102,8 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
             manifest_id: manifest.id,
             product_id: item.productId,
             quantity: item.quantity,
+            warehouse_floor: item.warehouse_floor,
+            warehouse_position: item.warehouse_position,
           }))
         );
 
@@ -137,24 +144,45 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
 
   const updateItem = (index: number, field: keyof ManifestItem, value: string | number) => {
     const newItems = [...items];
-    newItems[index] = {
-      ...newItems[index],
-      [field]: value,
-    };
+    const item = newItems[index];
+    
+    if (field === "productId") {
+      const product = products?.find(p => p.id === value);
+      if (!product) return;
 
-    // Se estiver atualizando a quantidade, verifica o saldo em estoque
-    if (field === "quantity") {
-      const item = newItems[index];
+      // Se não houver posição disponível, não permitir adicionar
+      if (!product.warehouse_floor || !product.warehouse_position) {
+        toast({
+          title: "Produto indisponível",
+          description: `Não há posição disponível para o produto ${product.name}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      newItems[index] = {
+        ...item,
+        productId: value as string,
+        warehouse_floor: product.warehouse_floor,
+        warehouse_position: product.warehouse_position,
+        quantity: item.quantity || 0,
+      };
+    } else if (field === "quantity") {
       const product = products?.find(p => p.id === item.productId);
       
       if (product && Number(value) > (product.stock || 0)) {
         toast({
           title: "Quantidade indisponível",
-          description: `O produto ${product.name} possui apenas ${product.stock} unidades em estoque.`,
+          description: `O produto ${product.name} possui apenas ${product.stock} unidades em estoque na posição ${product.warehouse_floor}-${product.warehouse_position}.`,
           variant: "destructive",
         });
         return;
       }
+
+      newItems[index] = {
+        ...item,
+        quantity: Number(value),
+      };
     }
 
     setItems(newItems);
