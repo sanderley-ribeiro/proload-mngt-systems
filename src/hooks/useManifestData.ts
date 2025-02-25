@@ -9,6 +9,8 @@ interface ManifestItem {
   product_id: string;
   quantity: number;
   scanned_at: string[] | null;
+  warehouse_floor: string | null;
+  warehouse_position: number | null;
   product: {
     name: string;
     unit: string;
@@ -40,14 +42,31 @@ export function useManifestData(manifestId: string) {
       }
 
       try {
-        // First try to get manifest data with explicit select
+        // Get manifest data with items including warehouse position information
         const { data: manifestData, error: manifestError } = await supabase
           .from("shipping_manifests")
-          .select(
-            "id, number, client_name, driver_name, vehicle_plate, status"
-          )
+          .select(`
+            id,
+            number,
+            client_name,
+            driver_name,
+            vehicle_plate,
+            status,
+            items:shipping_manifest_items(
+              id,
+              product_id,
+              quantity,
+              scanned_at,
+              warehouse_floor,
+              warehouse_position,
+              product:products(
+                name,
+                unit
+              )
+            )
+          `)
           .eq("id", manifestId)
-          .maybeSingle();
+          .single();
 
         if (manifestError) {
           console.error("Erro ao buscar romaneio:", manifestError);
@@ -63,31 +82,7 @@ export function useManifestData(manifestId: string) {
           throw new Error("Romaneio não encontrado");
         }
 
-        // If manifest exists, get its items
-        const { data: itemsData, error: itemsError } = await supabase
-          .from("shipping_manifest_items")
-          .select(`
-            id,
-            product_id,
-            quantity,
-            scanned_at,
-            product:products(
-              name,
-              unit
-            )
-          `)
-          .eq("manifest_id", manifestId);
-
-        if (itemsError) {
-          console.error("Erro ao buscar itens do romaneio:", itemsError);
-          toast.error("Erro ao buscar itens do romaneio");
-          throw itemsError;
-        }
-
-        return {
-          ...manifestData,
-          items: itemsData || [],
-        } as ManifestData;
+        return manifestData as ManifestData;
       } catch (error) {
         console.error("Erro ao processar requisição:", error);
         toast.error("Erro ao buscar dados do romaneio");
