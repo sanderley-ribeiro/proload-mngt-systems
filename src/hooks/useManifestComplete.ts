@@ -63,10 +63,7 @@ export function useManifestComplete(manifestId: string) {
 
       // Atualiza as quantidades no warehouse_occupation_report usando função personalizada
       for (const item of data.shipping_manifest_items) {
-        // Usar o método .from().rpc() em vez de .rpc() diretamente
         const { error: updateError } = await supabase
-          .from('rpc')
-          .select('*')
           .rpc('update_warehouse_position_quantity', {
             p_product_id: item.product_id,
             p_floor: item.warehouse_floor,
