@@ -61,6 +61,22 @@ export function useManifestComplete(manifestId: string) {
         throw movementError;
       }
 
+      // Atualiza as quantidades no warehouse_occupation_report
+      for (const item of data.shipping_manifest_items) {
+        const { error: updateError } = await supabase
+          .rpc('update_warehouse_position_quantity', {
+            p_product_id: item.product_id,
+            p_floor: item.warehouse_floor,
+            p_position: item.warehouse_position,
+            p_quantity: -item.quantity // Subtrai a quantidade (por isso o sinal negativo)
+          });
+
+        if (updateError) {
+          console.error("Error updating warehouse position:", updateError);
+          throw updateError;
+        }
+      }
+
       console.log("Manifest finalized successfully:", data);
       return data;
     },
@@ -78,6 +94,7 @@ export function useManifestComplete(manifestId: string) {
       queryClient.invalidateQueries({ queryKey: ["manifests"] });
       queryClient.invalidateQueries({ queryKey: ["manifest", manifestId] });
       queryClient.invalidateQueries({ queryKey: ["stock-levels"] }); // Refresh dashboard stock data
+      queryClient.invalidateQueries({ queryKey: ["warehouse-occupation-report"] }); // Refresh warehouse map
       navigate("/loading");
     },
     onError: (error) => {
