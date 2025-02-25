@@ -11,32 +11,30 @@ interface StockData {
 
 export const StockLevelsChart = () => {
   const { data: stockData, isLoading: stockLoading } = useQuery({
-    queryKey: ["stock-levels"],
+    queryKey: ["warehouse-stock-levels"],
     queryFn: async () => {
-      const { data: products, error } = await supabase
-        .from("products")
+      // Buscar o estoque agregado do warehouse_occupation_report
+      const { data: warehouseData, error } = await supabase
+        .from("warehouse_occupation_report")
         .select(`
-          name,
-          product_movements (
-            type,
-            quantity
-          )
+          product_name,
+          quantity
         `);
 
       if (error) throw error;
 
-      return products.map((product: any) => {
-        const stockLevel = product.product_movements?.reduce((acc: number, movement: any) => {
-          return movement.type === 'input' 
-            ? acc + Number(movement.quantity)
-            : acc - Number(movement.quantity);
-        }, 0) || 0;
+      // Agrupar quantidades por produto
+      const stockByProduct = warehouseData.reduce((acc: { [key: string]: number }, item) => {
+        if (!item.product_name) return acc;
+        acc[item.product_name] = (acc[item.product_name] || 0) + Number(item.quantity || 0);
+        return acc;
+      }, {});
 
-        return {
-          name: product.name,
-          quantidade: stockLevel
-        };
-      });
+      // Converter para o formato esperado pelo gráfico
+      return Object.entries(stockByProduct).map(([name, quantity]) => ({
+        name,
+        quantidade: quantity
+      }));
     },
   });
 
