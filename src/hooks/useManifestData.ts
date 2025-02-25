@@ -33,7 +33,6 @@ export function useManifestData(manifestId: string) {
   return useQuery({
     queryKey: ["manifest", manifestId],
     queryFn: async () => {
-      // Validate manifest ID format before making the request
       if (!manifestId || manifestId.length !== 36) {
         console.error("Invalid manifest ID format:", manifestId);
         toast.error("ID do romaneio inválido");
@@ -42,7 +41,6 @@ export function useManifestData(manifestId: string) {
       }
 
       try {
-        // Get manifest data with items including warehouse position information
         const { data: manifestData, error: manifestError } = await supabase
           .from("shipping_manifests")
           .select(`
@@ -52,14 +50,14 @@ export function useManifestData(manifestId: string) {
             driver_name,
             vehicle_plate,
             status,
-            items:shipping_manifest_items(
+            items:shipping_manifest_items (
               id,
               product_id,
               quantity,
               scanned_at,
               warehouse_floor,
               warehouse_position,
-              product:products(
+              product:products (
                 name,
                 unit
               )

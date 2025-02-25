@@ -16,9 +16,6 @@ interface Product {
   id: string;
   name: string;
   unit: string;
-  warehouse_floor?: string;
-  warehouse_position?: number;
-  available_quantity?: number;
 }
 
 interface ManifestItemProps {
@@ -26,8 +23,6 @@ interface ManifestItemProps {
   item: {
     productId: string;
     quantity: number;
-    warehouse_floor?: string;
-    warehouse_position?: number;
   };
   products?: Product[];
   onUpdate: (index: number, field: "productId" | "quantity", value: string | number) => void;
@@ -41,15 +36,10 @@ export default function ManifestItem({
   onUpdate, 
   onRemove 
 }: ManifestItemProps) {
-  const selectedProduct = products?.find(p => p.id === item.productId);
-  const position = selectedProduct?.warehouse_floor && selectedProduct?.warehouse_position
-    ? `${selectedProduct.warehouse_floor}-${selectedProduct.warehouse_position}`
-    : 'Sem posição';
-
   return (
     <Card>
       <CardContent className="pt-6">
-        <div className="grid gap-4 md:grid-cols-[1fr,120px,150px,40px]">
+        <div className="grid gap-4 md:grid-cols-[1fr,120px,40px]">
           <div className="grid gap-2">
             <Label>Produto</Label>
             <Select
@@ -80,13 +70,6 @@ export default function ManifestItem({
               min="0"
               step="0.01"
             />
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Posição</Label>
-            <div className="h-10 px-3 py-2 rounded-md border bg-muted text-sm">
-              {position}
-            </div>
           </div>
 
           <div className="flex items-end">

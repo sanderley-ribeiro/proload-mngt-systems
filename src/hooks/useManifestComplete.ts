@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import type { ManifestData } from "./useManifestData";
 
 export function useManifestComplete(manifestId: string) {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ export function useManifestComplete(manifestId: string) {
       if (!profile.user) throw new Error("Usuário não autenticado");
 
       // Create stock output movements for each item with warehouse position
-      const stockMovements = data.shipping_manifest_items.map(item => ({
+      const stockMovements = (data.shipping_manifest_items || []).map(item => ({
         product_id: item.product_id,
         type: 'output',
         quantity: item.quantity,
@@ -61,28 +62,12 @@ export function useManifestComplete(manifestId: string) {
         throw movementError;
       }
 
-      // Atualiza as quantidades no warehouse_occupation_report usando função personalizada
-      for (const item of data.shipping_manifest_items) {
-        const { error: updateError } = await supabase
-          .rpc('update_warehouse_position_quantity', {
-            p_product_id: item.product_id,
-            p_floor: item.warehouse_floor,
-            p_position: item.warehouse_position,
-            p_quantity: -item.quantity // Subtrai a quantidade (por isso o sinal negativo)
-          });
-
-        if (updateError) {
-          console.error("Error updating warehouse position:", updateError);
-          throw updateError;
-        }
-      }
-
       console.log("Manifest finalized successfully:", data);
-      return data;
+      return data as ManifestData;
     },
     onSuccess: (data) => {
       // Create a summary message of products that were deducted from stock
-      const productSummary = data.shipping_manifest_items
+      const productSummary = data.items
         .map(item => `${item.product.name}: ${item.quantity} (${item.warehouse_floor}-${item.warehouse_position})`)
         .join(', ');
       
@@ -94,7 +79,6 @@ export function useManifestComplete(manifestId: string) {
       queryClient.invalidateQueries({ queryKey: ["manifests"] });
       queryClient.invalidateQueries({ queryKey: ["manifest", manifestId] });
       queryClient.invalidateQueries({ queryKey: ["stock-levels"] }); // Refresh dashboard stock data
-      queryClient.invalidateQueries({ queryKey: ["warehouse-occupation-report"] }); // Refresh warehouse map
       navigate("/loading");
     },
     onError: (error) => {
