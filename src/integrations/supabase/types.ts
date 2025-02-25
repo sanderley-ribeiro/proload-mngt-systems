@@ -297,6 +297,15 @@ export type Database = {
           available_quantity: number
         }[]
       }
+      update_warehouse_position_quantity: {
+        Args: {
+          p_product_id: string
+          p_floor: string
+          p_position: number
+          p_quantity: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_permission:
