@@ -40,8 +40,50 @@ export function useManifestComplete(manifestId: string) {
       const { data: profile } = await supabase.auth.getUser();
       if (!profile.user) throw new Error("Usuário não autenticado");
 
-      // Como os produtos já foram reservados na criação do romaneio,
-      // aqui apenas registramos que o romaneio foi finalizado sem fazer novas movimentações de estoque
+      // Create stock output movements for each item with warehouse position
+      const stockMovements = data.shipping_manifest_items.map(item => {
+        console.log(`Criando movimento de saída para produto ${item.product.name} na posição ${item.warehouse_floor}-${item.warehouse_position}`);
+        
+        return {
+          product_id: item.product_id,
+          type: 'output',
+          quantity: -Math.abs(item.quantity), // Garantir que a quantidade seja negativa para saídas
+          created_by: profile.user.id,
+          floor: item.warehouse_floor,
+          position_number: item.warehouse_position,
+          notes: `Saída por romaneio #${data.number}`
+        };
+      });
+
+      // Insert all stock movements
+      const { error: movementError } = await supabase
+        .from('product_movements')
+        .insert(stockMovements);
+
+      if (movementError) {
+        console.error("Error creating stock movements:", movementError);
+        throw movementError;
+      }
+
+      // Atualizar explicitamente as posições do warehouse_occupation_report
+      for (const item of data.shipping_manifest_items) {
+        // Chama a função RPC para atualizar a quantidade na posição específica
+        const { error: updateError } = await supabase
+          .rpc('update_warehouse_position_quantity', {
+            p_product_id: item.product_id,
+            p_floor: item.warehouse_floor,
+            p_position: item.warehouse_position,
+            p_quantity: -Math.abs(item.quantity) // Garantir que a quantidade seja negativa para saídas
+          });
+        
+        if (updateError) {
+          console.error(`Error updating warehouse position for product ${item.product_id}:`, updateError);
+          throw updateError;
+        }
+        
+        console.log(`Posição do armazém atualizada: produto ${item.product.name}, posição ${item.warehouse_floor}-${item.warehouse_position}, quantidade -${item.quantity}`);
+      }
+
       console.log("Manifest finalized successfully:", data);
       return data;
     },
@@ -51,13 +93,16 @@ export function useManifestComplete(manifestId: string) {
         .map(item => `${item.product.name}: ${item.quantity} (${item.warehouse_floor}-${item.warehouse_position})`)
         .join(', ');
       
-      toast.success(`Romaneio #${data.number} finalizado.`, {
-        description: `Produtos: ${productSummary}`
+      toast.success(`Romaneio #${data.number} finalizado e estoque atualizado.`, {
+        description: `Produtos deduzidos: ${productSummary}`
       });
 
       // Invalidate relevant queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["manifests"] });
       queryClient.invalidateQueries({ queryKey: ["manifest", manifestId] });
+      queryClient.invalidateQueries({ queryKey: ["stock-levels"] }); 
+      queryClient.invalidateQueries({ queryKey: ["products-with-stock"] });
+      queryClient.invalidateQueries({ queryKey: ["warehouse-occupation-report"] });
       
       // Aguardar um pouco para garantir que os dados sejam atualizados antes de navegar
       setTimeout(() => {
