@@ -41,6 +41,8 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
   const { data: products } = useQuery({
     queryKey: ["products-with-stock"],
     queryFn: async () => {
+      console.log("Buscando produtos com posições mais antigas");
+      
       // Primeiro, busca todos os produtos
       const { data: products, error: productsError } = await supabase
         .from("products")
@@ -57,15 +59,22 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
           })
           .single();
 
+        console.log(`Produto ${product.name}, posição mais antiga:`, position);
+
         return { 
           ...product, 
           warehouse_floor: position?.floor,
           warehouse_position: position?.position_number,
+          available_quantity: position?.available_quantity || 0,
           stock: position?.available_quantity || 0
         };
       }));
 
-      return productsWithStock as Product[];
+      // Filtra apenas produtos que têm estoque disponível
+      const availableProducts = productsWithStock.filter(p => p.stock && p.stock > 0 && p.warehouse_floor && p.warehouse_position);
+      
+      console.log("Produtos disponíveis em estoque:", availableProducts);
+      return availableProducts as Product[];
     },
   });
 
@@ -78,6 +87,11 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
     try {
       const { data: profile } = await supabase.auth.getUser();
       if (!profile.user) throw new Error("Usuário não autenticado");
+
+      // Validar se há itens no romaneio
+      if (items.length === 0) {
+        throw new Error("Adicione pelo menos um produto ao romaneio");
+      }
 
       // Criar o romaneio
       const { data: manifest, error: manifestError } = await supabase
@@ -94,6 +108,8 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
 
       if (manifestError) throw manifestError;
 
+      console.log("Romaneio criado:", manifest);
+
       // Inserir os itens do romaneio com suas posições
       const { error: itemsError } = await supabase
         .from("shipping_manifest_items")
@@ -108,6 +124,8 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
         );
 
       if (itemsError) throw itemsError;
+
+      console.log("Itens inseridos no romaneio");
 
       // Invalidar a query para atualizar a lista
       queryClient.invalidateQueries({ queryKey: ["manifests"] });
@@ -160,6 +178,8 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
         return;
       }
 
+      console.log(`Selecionando produto ${product.name} na posição ${product.warehouse_floor}-${product.warehouse_position}`);
+
       newItems[index] = {
         ...item,
         productId: value as string,
@@ -170,10 +190,10 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
     } else if (field === "quantity") {
       const product = products?.find(p => p.id === item.productId);
       
-      if (product && Number(value) > (product.stock || 0)) {
+      if (product && Number(value) > (product.available_quantity || 0)) {
         toast({
           title: "Quantidade indisponível",
-          description: `O produto ${product.name} possui apenas ${product.stock} unidades em estoque na posição ${product.warehouse_floor}-${product.warehouse_position}.`,
+          description: `O produto ${product.name} possui apenas ${product.available_quantity} unidades em estoque na posição ${product.warehouse_floor}-${product.warehouse_position}.`,
           variant: "destructive",
         });
         return;

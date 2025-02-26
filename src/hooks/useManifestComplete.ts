@@ -41,15 +41,19 @@ export function useManifestComplete(manifestId: string) {
       if (!profile.user) throw new Error("Usuário não autenticado");
 
       // Create stock output movements for each item with warehouse position
-      const stockMovements = data.shipping_manifest_items.map(item => ({
-        product_id: item.product_id,
-        type: 'output',
-        quantity: item.quantity,
-        created_by: profile.user.id,
-        floor: item.warehouse_floor,
-        position_number: item.warehouse_position,
-        notes: `Saída por romaneio #${data.number}`
-      }));
+      const stockMovements = data.shipping_manifest_items.map(item => {
+        console.log(`Criando movimento de saída para produto ${item.product.name} na posição ${item.warehouse_floor}-${item.warehouse_position}`);
+        
+        return {
+          product_id: item.product_id,
+          type: 'output',
+          quantity: item.quantity,
+          created_by: profile.user.id,
+          floor: item.warehouse_floor,
+          position_number: item.warehouse_position,
+          notes: `Saída por romaneio #${data.number}`
+        };
+      });
 
       // Insert all stock movements
       const { error: movementError } = await supabase
@@ -77,7 +81,9 @@ export function useManifestComplete(manifestId: string) {
       // Invalidate relevant queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["manifests"] });
       queryClient.invalidateQueries({ queryKey: ["manifest", manifestId] });
-      queryClient.invalidateQueries({ queryKey: ["stock-levels"] }); // Refresh dashboard stock data
+      queryClient.invalidateQueries({ queryKey: ["stock-levels"] }); 
+      queryClient.invalidateQueries({ queryKey: ["products-with-stock"] });
+      queryClient.invalidateQueries({ queryKey: ["warehouse-occupation-report"] });
       navigate("/loading");
     },
     onError: (error) => {
