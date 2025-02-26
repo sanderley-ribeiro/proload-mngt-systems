@@ -66,8 +66,11 @@ export function AddStockItem() {
 
       const position = positions[0];
 
-      // Inserir o movimento sem tentar acessar a tabela profiles diretamente
-      const { error: movementError } = await supabase
+      console.log("Posição selecionada:", position);
+      console.log("Usuário atual:", user.id);
+      
+      // Inserir o movimento
+      const { data, error: movementError } = await supabase
         .from("product_movements")
         .insert({
           product_id: productId,
@@ -76,10 +79,16 @@ export function AddStockItem() {
           created_by: user.id,
           floor: position.floor,
           position_number: position.position_number
-        });
+        })
+        .select();
 
-      if (movementError) throw movementError;
+      if (movementError) {
+        console.error("Erro detalhado:", movementError);
+        throw movementError;
+      }
 
+      console.log("Movimento criado com sucesso:", data);
+      
       toast.success("Produto adicionado ao estoque com sucesso!");
       setProductId("");
       setQuantity("");
@@ -89,8 +98,8 @@ export function AddStockItem() {
       queryClient.invalidateQueries({ queryKey: ["warehouse-stock-levels"] });
       queryClient.invalidateQueries({ queryKey: ["stock-movements"] });
     } catch (error: any) {
-      toast.error("Erro ao adicionar produto ao estoque: " + error.message);
       console.error("Erro ao adicionar produto:", error);
+      toast.error("Erro ao adicionar produto ao estoque: " + error.message);
     } finally {
       setIsLoading(false);
     }
