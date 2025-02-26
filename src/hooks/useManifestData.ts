@@ -1,103 +1,66 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 
-interface ManifestItem {
+export interface ManifestItem {
   id: string;
-  product_id: string;
   quantity: number;
   scanned_at: string[] | null;
   product: {
+    id: string;
     name: string;
     unit: string;
   };
+  warehouse_floor: string | null;
+  warehouse_position: number | null;
 }
 
-interface ManifestData {
+export interface Manifest {
   id: string;
   number: string;
   client_name: string;
   driver_name: string;
   vehicle_plate: string;
-  items: ManifestItem[];
   status: string;
+  created_at: string;
+  items: ManifestItem[];
 }
 
-export function useManifestData(manifestId: string) {
-  const navigate = useNavigate();
-
+export function useManifestData(manifestId: string | undefined) {
   return useQuery({
     queryKey: ["manifest", manifestId],
     queryFn: async () => {
-      // Validate manifest ID format before making the request
-      if (!manifestId || manifestId.length !== 36) {
-        console.error("Invalid manifest ID format:", manifestId);
-        toast.error("ID do romaneio inválido");
-        navigate("/loading");
-        throw new Error("ID do romaneio inválido");
-      }
+      if (!manifestId) throw new Error("ID do romaneio não informado");
 
-      try {
-        // First try to get manifest data with explicit select
-        const { data: manifestData, error: manifestError } = await supabase
-          .from("shipping_manifests")
-          .select(
-            "id, number, client_name, driver_name, vehicle_plate, status"
-          )
-          .eq("id", manifestId)
-          .maybeSingle();
-
-        if (manifestError) {
-          console.error("Erro ao buscar romaneio:", manifestError);
-          toast.error("Erro ao buscar romaneio");
-          navigate("/loading");
-          throw manifestError;
-        }
-
-        if (!manifestData) {
-          console.error("Romaneio não encontrado:", manifestId);
-          toast.error("Romaneio não encontrado");
-          navigate("/loading");
-          throw new Error("Romaneio não encontrado");
-        }
-
-        // If manifest exists, get its items
-        const { data: itemsData, error: itemsError } = await supabase
-          .from("shipping_manifest_items")
-          .select(`
+      const { data, error } = await supabase
+        .from("shipping_manifests")
+        .select(`
+          id,
+          number,
+          client_name,
+          driver_name,
+          vehicle_plate,
+          status,
+          created_at,
+          items:shipping_manifest_items(
             id,
-            product_id,
             quantity,
             scanned_at,
+            warehouse_floor,
+            warehouse_position,
             product:products(
+              id,
               name,
               unit
             )
-          `)
-          .eq("manifest_id", manifestId);
+          )
+        `)
+        .eq("id", manifestId)
+        .single();
 
-        if (itemsError) {
-          console.error("Erro ao buscar itens do romaneio:", itemsError);
-          toast.error("Erro ao buscar itens do romaneio");
-          throw itemsError;
-        }
-
-        return {
-          ...manifestData,
-          items: itemsData || [],
-        } as ManifestData;
-      } catch (error) {
-        console.error("Erro ao processar requisição:", error);
-        toast.error("Erro ao buscar dados do romaneio");
-        navigate("/loading");
-        throw error;
-      }
+      if (error) throw error;
+      return data as Manifest;
     },
-    retry: false,
-    retryOnMount: false,
+    enabled: !!manifestId,
   });
 }
-
-export type { ManifestData, ManifestItem };

@@ -19,11 +19,6 @@ interface Product {
   unit: string;
 }
 
-interface WarehousePosition {
-  floor: string;
-  position_number: number;
-}
-
 export function AddStockItem() {
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -71,7 +66,7 @@ export function AddStockItem() {
 
       const position = positions[0];
 
-      // Inserir o movimento com a posição obtida
+      // Inserir o movimento sem tentar acessar a tabela profiles diretamente
       const { error: movementError } = await supabase
         .from("product_movements")
         .insert({
@@ -91,6 +86,7 @@ export function AddStockItem() {
       
       // Atualizar os dados em todas as visualizações relevantes
       queryClient.invalidateQueries({ queryKey: ["warehouse-occupation-report"] });
+      queryClient.invalidateQueries({ queryKey: ["warehouse-stock-levels"] });
       queryClient.invalidateQueries({ queryKey: ["stock-movements"] });
     } catch (error: any) {
       toast.error("Erro ao adicionar produto ao estoque: " + error.message);
