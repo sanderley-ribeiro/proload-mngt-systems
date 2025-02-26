@@ -111,7 +111,7 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
       console.log("Romaneio criado:", manifest);
 
       // Inserir os itens do romaneio com suas posições
-      const { error: itemsError } = await supabase
+      const { data: insertedItems, error: itemsError } = await supabase
         .from("shipping_manifest_items")
         .insert(
           items.map(item => ({
@@ -121,17 +121,69 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
             warehouse_floor: item.warehouse_floor,
             warehouse_position: item.warehouse_position,
           }))
-        );
+        )
+        .select();
 
       if (itemsError) throw itemsError;
 
       console.log("Itens inseridos no romaneio");
 
+      // Criar movimentos de estoque para cada item e atualizar warehouse_occupation_report
+      const stockMovements = items.map(item => {
+        const product = products?.find(p => p.id === item.productId);
+        console.log(`Criando movimento de saída para produto ${product?.name} na posição ${item.warehouse_floor}-${item.warehouse_position}`);
+        
+        return {
+          product_id: item.productId,
+          type: 'output',
+          quantity: -Math.abs(item.quantity), // Garantir que a quantidade seja negativa para saídas
+          created_by: profile.user.id,
+          floor: item.warehouse_floor,
+          position_number: item.warehouse_position,
+          notes: `Reserva para romaneio #${manifest.number}`
+        };
+      });
+
+      // Inserir todos os movimentos de estoque
+      const { error: movementError } = await supabase
+        .from('product_movements')
+        .insert(stockMovements);
+
+      if (movementError) {
+        console.error("Error creating stock movements:", movementError);
+        throw movementError;
+      }
+
+      // Atualizar explicitamente as posições do warehouse_occupation_report
+      for (const item of items) {
+        const product = products?.find(p => p.id === item.productId);
+        
+        // Chama a função RPC para atualizar a quantidade na posição específica
+        const { error: updateError } = await supabase
+          .rpc('update_warehouse_position_quantity', {
+            p_product_id: item.productId,
+            p_floor: item.warehouse_floor,
+            p_position: item.warehouse_position,
+            p_quantity: -Math.abs(item.quantity) // Garantir que a quantidade seja negativa para saídas
+          });
+        
+        if (updateError) {
+          console.error(`Error updating warehouse position for product ${item.productId}:`, updateError);
+          throw updateError;
+        }
+        
+        console.log(`Posição do armazém atualizada: produto ${product?.name}, posição ${item.warehouse_floor}-${item.warehouse_position}, quantidade -${item.quantity}`);
+      }
+
       // Invalidar a query para atualizar a lista
       queryClient.invalidateQueries({ queryKey: ["manifests"] });
+      queryClient.invalidateQueries({ queryKey: ["stock-levels"] }); 
+      queryClient.invalidateQueries({ queryKey: ["products-with-stock"] });
+      queryClient.invalidateQueries({ queryKey: ["warehouse-occupation-report"] });
 
       toast({
         title: "Romaneio criado com sucesso!",
+        description: "Os produtos foram reservados no estoque."
       });
       
       // Limpar o formulário usando a referência
