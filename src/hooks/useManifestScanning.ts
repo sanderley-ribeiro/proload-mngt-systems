@@ -15,7 +15,7 @@ export function useManifestScanning(manifestId: string) {
   const handleBarcodeScan = useCallback((scannedBarcode: string) => {
     if (!manifest) return;
 
-    const item = manifest.items.find((item) => item.product_id === scannedBarcode);
+    const item = manifest.items.find((item) => item.product.id === scannedBarcode);
 
     if (!item) {
       toast.error("Produto não encontrado no romaneio");

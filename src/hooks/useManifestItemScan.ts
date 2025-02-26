@@ -2,7 +2,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { ManifestData, ManifestItem } from "./useManifestData";
+import type { Manifest, ManifestItem } from "./useManifestData";
 
 export function useManifestItemScan(manifestId: string) {
   const queryClient = useQueryClient();
@@ -49,7 +49,7 @@ export function useManifestItemScan(manifestId: string) {
     console.log("Atualizando scans para:", newScans);
 
     // Atualização otimista da UI
-    queryClient.setQueryData(["manifest", manifestId], (oldData: ManifestData | undefined) => {
+    queryClient.setQueryData(["manifest", manifestId], (oldData: Manifest | undefined) => {
       if (!oldData) return oldData;
       return {
         ...oldData,

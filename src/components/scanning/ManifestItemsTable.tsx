@@ -10,19 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-
-interface ManifestItem {
-  id: string;
-  product_id: string;
-  quantity: number;
-  scanned_at: string[] | null;
-  warehouse_floor: string | null;
-  warehouse_position: number | null;
-  product: {
-    name: string;
-    unit: string;
-  };
-}
+import { ManifestItem } from "@/hooks/useManifestData";
 
 interface ManifestItemsTableProps {
   items: ManifestItem[];
