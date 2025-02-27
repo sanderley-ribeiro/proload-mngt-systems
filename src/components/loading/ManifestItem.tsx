@@ -10,12 +10,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Trash2 } from "lucide-react";
 
 interface Product {
   id: string;
   name: string;
   unit: string;
+  stock?: number;
+  warehouse_floor?: string;
+  warehouse_position?: number;
+  available_quantity?: number;
 }
 
 interface ManifestItemProps {
@@ -23,6 +28,8 @@ interface ManifestItemProps {
   item: {
     productId: string;
     quantity: number;
+    warehouse_floor?: string;
+    warehouse_position?: number;
   };
   products?: Product[];
   onUpdate: (index: number, field: "productId" | "quantity", value: string | number) => void;
@@ -36,10 +43,12 @@ export default function ManifestItem({
   onUpdate, 
   onRemove 
 }: ManifestItemProps) {
+  const selectedProduct = products?.find(p => p.id === item.productId);
+  
   return (
     <Card>
       <CardContent className="pt-6">
-        <div className="grid gap-4 md:grid-cols-[1fr,120px,40px]">
+        <div className="grid gap-4 md:grid-cols-[1fr,120px,150px,40px]">
           <div className="grid gap-2">
             <Label>Produto</Label>
             <Select
@@ -53,7 +62,7 @@ export default function ManifestItem({
               <SelectContent>
                 {products?.map((product) => (
                   <SelectItem key={product.id} value={product.id}>
-                    {product.name} ({product.unit})
+                    {product.name} ({product.unit}) - Disponível: {product.available_quantity || 0}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -65,11 +74,24 @@ export default function ManifestItem({
             <Input
               type="number"
               value={item.quantity}
-              onChange={(e) => onUpdate(index, "quantity", parseFloat(e.target.value))}
+              onChange={(e) => onUpdate(index, "quantity", parseFloat(e.target.value) || 0)}
               required
               min="0"
               step="0.01"
             />
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Posição</Label>
+            {item.warehouse_floor && item.warehouse_position ? (
+              <Badge className="h-10 flex items-center justify-center">
+                {item.warehouse_floor}-{item.warehouse_position}
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="h-10 flex items-center justify-center">
+                Não definida
+              </Badge>
+            )}
           </div>
 
           <div className="flex items-end">

@@ -12,7 +12,7 @@ export function useManifestComplete(manifestId: string) {
     mutationFn: async () => {
       console.log("Attempting to finalize manifest:", manifestId);
       
-      // First, get the manifest data with items and product info
+      // Apenas atualiza o status do romaneio para finalizado
       const { data, error } = await supabase
         .from("shipping_manifests")
         .update({ status: "finalizado" })
@@ -37,6 +37,25 @@ export function useManifestComplete(manifestId: string) {
       }
 
       console.log("Manifest finalized successfully:", data);
+      
+      // Atualiza as notas das movimentações de saída para refletir o romaneio finalizado
+      const { data: profile } = await supabase.auth.getUser();
+      if (!profile.user) throw new Error("Usuário não autenticado");
+      
+      // Atualiza as notas das movimentações de estoque para refletir o número do romaneio
+      for (const item of data.shipping_manifest_items) {
+        await supabase
+          .from('product_movements')
+          .update({
+            notes: `Saída para romaneio #${data.number} (finalizado)`
+          })
+          .eq('product_id', item.product_id)
+          .eq('floor', item.warehouse_floor)
+          .eq('position_number', item.warehouse_position)
+          .eq('notes', 'Reserva para romaneio (em criação)')
+          .is('created_by', profile.user.id);
+      }
+      
       return data;
     },
     onSuccess: (data) => {
