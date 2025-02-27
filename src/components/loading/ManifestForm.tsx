@@ -102,17 +102,9 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
 
       if (movementError) throw movementError;
 
-      // Atualizar explicitamente a posição do warehouse_occupation_report
-      const { error: updateError } = await supabase
-        .rpc('update_warehouse_position_quantity', {
-          p_product_id: productId,
-          p_floor: floor,
-          p_position: position,
-          p_quantity: -Math.abs(quantity) // Garantir que a quantidade seja negativa para saídas
-        });
+      // Não tentamos mais atualizar warehouse_occupation_report diretamente, pois é uma view
+      // Apenas atualizamos a query para refletir as mudanças
       
-      if (updateError) throw updateError;
-
       console.log(`Estoque reservado com sucesso: produto ${productId}, posição ${floor}-${position}, quantidade -${quantity}`);
       
       // Atualizar as queries para refletir as mudanças
@@ -151,17 +143,8 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
 
       if (movementError) throw movementError;
 
-      // Atualizar explicitamente a posição do warehouse_occupation_report
-      const { error: updateError } = await supabase
-        .rpc('update_warehouse_position_quantity', {
-          p_product_id: productId,
-          p_floor: floor,
-          p_position: position,
-          p_quantity: Math.abs(quantity) // Garantir que a quantidade seja positiva para entradas
-        });
+      // Não tentamos mais atualizar warehouse_occupation_report diretamente, pois é uma view
       
-      if (updateError) throw updateError;
-
       console.log(`Estoque liberado com sucesso: produto ${productId}, posição ${floor}-${position}, quantidade +${quantity}`);
       
       // Atualizar as queries para refletir as mudanças

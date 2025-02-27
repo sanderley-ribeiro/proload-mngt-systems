@@ -53,7 +53,7 @@ export function useManifestComplete(manifestId: string) {
           .eq('floor', item.warehouse_floor)
           .eq('position_number', item.warehouse_position)
           .eq('notes', 'Reserva para romaneio (em criação)')
-          .is('created_by', profile.user.id);
+          .eq('created_by', profile.user.id);
       }
       
       return data;
