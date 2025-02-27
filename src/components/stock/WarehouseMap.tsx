@@ -31,9 +31,12 @@ export function WarehouseMap() {
         floor: item.floor || "N/A",
       })) || [];
     },
-    // Diminuir o tempo de stale para forçar atualizações mais frequentes
-    staleTime: 1000 * 60, // 1 minuto
-    refetchOnWindowFocus: true,
+    // Configurações para garantir que os dados sejam atualizados frequentemente
+    staleTime: 0, // Dados são sempre considerados obsoletos
+    cacheTime: 0, // Não manter em cache 
+    refetchOnMount: true, // Refazer a consulta quando o componente for montado
+    refetchOnWindowFocus: true, // Refazer a consulta quando a janela obtiver foco
+    refetchInterval: 5000, // Refazer a consulta a cada 5 segundos
   });
 
   if (isLoading) {
