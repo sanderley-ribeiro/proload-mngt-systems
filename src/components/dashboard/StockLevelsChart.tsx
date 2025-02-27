@@ -13,6 +13,8 @@ export const StockLevelsChart = () => {
   const { data: stockData, isLoading: stockLoading } = useQuery({
     queryKey: ["warehouse-stock-levels"],
     queryFn: async () => {
+      console.log("Fetching warehouse stock levels data...");
+      
       // Buscar o estoque agregado do warehouse_occupation_report
       const { data: warehouseData, error } = await supabase
         .from("warehouse_occupation_report")
@@ -21,7 +23,12 @@ export const StockLevelsChart = () => {
           quantity
         `);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching warehouse data:", error);
+        throw error;
+      }
+
+      console.log("Warehouse data received:", warehouseData);
 
       // Agrupar quantidades por produto
       const stockByProduct = warehouseData.reduce((acc: { [key: string]: number }, item) => {
@@ -31,11 +38,17 @@ export const StockLevelsChart = () => {
       }, {});
 
       // Converter para o formato esperado pelo gráfico
-      return Object.entries(stockByProduct).map(([name, quantity]) => ({
+      const formattedData = Object.entries(stockByProduct).map(([name, quantity]) => ({
         name,
         quantidade: quantity
       }));
+
+      console.log("Formatted stock data:", formattedData);
+      return formattedData;
     },
+    // Diminuir o tempo de stale para forçar atualizações mais frequentes
+    staleTime: 1000 * 60, // 1 minuto
+    refetchOnWindowFocus: true,
   });
 
   return (

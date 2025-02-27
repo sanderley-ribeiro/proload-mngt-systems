@@ -12,14 +12,14 @@ export function useManifestComplete(manifestId: string) {
     mutationFn: async () => {
       console.log("Attempting to finalize manifest:", manifestId);
       
-      // Apenas atualiza o status do romaneio para finalizado
-      const { data, error } = await supabase
+      // Primeiro, obter os dados do romaneio com os itens antes de finalizar
+      const { data: manifestData, error: fetchError } = await supabase
         .from("shipping_manifests")
-        .update({ status: "finalizado" })
-        .eq("id", manifestId)
         .select(`
+          id,
           number,
           shipping_manifest_items (
+            id,
             quantity,
             product_id,
             warehouse_floor,
@@ -29,6 +29,20 @@ export function useManifestComplete(manifestId: string) {
             )
           )
         `)
+        .eq("id", manifestId)
+        .single();
+
+      if (fetchError) {
+        console.error("Error fetching manifest data:", fetchError);
+        throw fetchError;
+      }
+
+      // Atualizar o status do romaneio para finalizado
+      const { data, error } = await supabase
+        .from("shipping_manifests")
+        .update({ status: "finalizado" })
+        .eq("id", manifestId)
+        .select()
         .single();
 
       if (error) {
@@ -38,16 +52,17 @@ export function useManifestComplete(manifestId: string) {
 
       console.log("Manifest finalized successfully:", data);
       
-      // Atualiza as notas das movimentações de saída para refletir o romaneio finalizado
+      // Obter o usuário logado
       const { data: profile } = await supabase.auth.getUser();
       if (!profile.user) throw new Error("Usuário não autenticado");
       
-      // Atualiza as notas das movimentações de estoque para refletir o número do romaneio
-      for (const item of data.shipping_manifest_items) {
+      // Para cada item do romaneio, atualizar a movimentação correspondente
+      for (const item of manifestData.shipping_manifest_items) {
+        // 1. Atualizar as notas das movimentações de estoque existentes
         await supabase
           .from('product_movements')
           .update({
-            notes: `Saída para romaneio #${data.number} (finalizado)`
+            notes: `Saída para romaneio #${manifestData.number} (finalizado)`
           })
           .eq('product_id', item.product_id)
           .eq('floor', item.warehouse_floor)
@@ -56,7 +71,7 @@ export function useManifestComplete(manifestId: string) {
           .eq('created_by', profile.user.id);
       }
       
-      return data;
+      return manifestData;
     },
     onSuccess: (data) => {
       // Create a summary message of products that were in the manifest

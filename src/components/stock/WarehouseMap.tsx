@@ -14,17 +14,26 @@ export function WarehouseMap() {
   const { data: occupations, isLoading } = useQuery<WarehouseOccupation[]>({
     queryKey: ["warehouse-occupation-report"],
     queryFn: async () => {
+      console.log("Fetching warehouse occupation data for map...");
+      
       const { data, error } = await supabase
         .from("warehouse_occupation_report")
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching warehouse occupation data:", error);
+        throw error;
+      }
 
+      console.log("Warehouse map data received:", data);
       return data?.map(item => ({
         ...item,
         floor: item.floor || "N/A",
       })) || [];
     },
+    // Diminuir o tempo de stale para forçar atualizações mais frequentes
+    staleTime: 1000 * 60, // 1 minuto
+    refetchOnWindowFocus: true,
   });
 
   if (isLoading) {
