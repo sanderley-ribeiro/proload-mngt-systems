@@ -38,7 +38,7 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
 
   // Query para buscar produtos com seus saldos em estoque e posições
-  const { data: products } = useQuery({
+  const { data: products, refetch: refetchProducts } = useQuery({
     queryKey: ["products-with-stock"],
     queryFn: async () => {
       console.log("Buscando produtos com posições mais antigas");
@@ -78,6 +78,87 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
     },
   });
 
+  // Função para reservar o estoque quando um item é adicionado ao romaneio
+  const reserveStock = async (productId: string, floor: string, position: number, quantity: number) => {
+    try {
+      console.log(`Reservando ${quantity} unidades do produto ${productId} na posição ${floor}-${position}`);
+      
+      // Get user profile for the movement creation
+      const { data: profile } = await supabase.auth.getUser();
+      if (!profile.user) throw new Error("Usuário não autenticado");
+
+      // Criar um movimento de saída para reservar o estoque
+      const { error: movementError } = await supabase
+        .from('product_movements')
+        .insert({
+          product_id: productId,
+          type: 'output',
+          quantity: -Math.abs(quantity), // Garantir que a quantidade seja negativa para saídas
+          created_by: profile.user.id,
+          floor: floor,
+          position_number: position,
+          notes: `Reserva para romaneio (em criação)`
+        });
+
+      if (movementError) throw movementError;
+
+      // Não tentamos mais atualizar warehouse_occupation_report diretamente, pois é uma view
+      // Apenas atualizamos a query para refletir as mudanças
+      
+      console.log(`Estoque reservado com sucesso: produto ${productId}, posição ${floor}-${position}, quantidade -${quantity}`);
+      
+      // Atualizar as queries para refletir as mudanças
+      queryClient.invalidateQueries({ queryKey: ["stock-levels"] });
+      queryClient.invalidateQueries({ queryKey: ["products-with-stock"] });
+      queryClient.invalidateQueries({ queryKey: ["warehouse-occupation-report"] });
+      
+      return true;
+    } catch (error) {
+      console.error("Erro ao reservar estoque:", error);
+      return false;
+    }
+  };
+
+  // Função para liberar o estoque quando um item é removido do romaneio
+  const releaseStock = async (productId: string, floor: string, position: number, quantity: number) => {
+    try {
+      console.log(`Liberando ${quantity} unidades do produto ${productId} na posição ${floor}-${position}`);
+      
+      // Get user profile for the movement creation
+      const { data: profile } = await supabase.auth.getUser();
+      if (!profile.user) throw new Error("Usuário não autenticado");
+
+      // Criar um movimento de entrada para liberar o estoque
+      const { error: movementError } = await supabase
+        .from('product_movements')
+        .insert({
+          product_id: productId,
+          type: 'input',
+          quantity: Math.abs(quantity), // Garantir que a quantidade seja positiva para entradas
+          created_by: profile.user.id,
+          floor: floor,
+          position_number: position,
+          notes: `Liberação de reserva de romaneio (cancelado)`
+        });
+
+      if (movementError) throw movementError;
+
+      // Não tentamos mais atualizar warehouse_occupation_report diretamente, pois é uma view
+      
+      console.log(`Estoque liberado com sucesso: produto ${productId}, posição ${floor}-${position}, quantidade +${quantity}`);
+      
+      // Atualizar as queries para refletir as mudanças
+      queryClient.invalidateQueries({ queryKey: ["stock-levels"] });
+      queryClient.invalidateQueries({ queryKey: ["products-with-stock"] });
+      queryClient.invalidateQueries({ queryKey: ["warehouse-occupation-report"] });
+      
+      return true;
+    } catch (error) {
+      console.error("Erro ao liberar estoque:", error);
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
@@ -111,7 +192,7 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
       console.log("Romaneio criado:", manifest);
 
       // Inserir os itens do romaneio com suas posições
-      const { data: insertedItems, error: itemsError } = await supabase
+      const { error: itemsError } = await supabase
         .from("shipping_manifest_items")
         .insert(
           items.map(item => ({
@@ -121,69 +202,17 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
             warehouse_floor: item.warehouse_floor,
             warehouse_position: item.warehouse_position,
           }))
-        )
-        .select();
+        );
 
       if (itemsError) throw itemsError;
 
       console.log("Itens inseridos no romaneio");
 
-      // Criar movimentos de estoque para cada item e atualizar warehouse_occupation_report
-      const stockMovements = items.map(item => {
-        const product = products?.find(p => p.id === item.productId);
-        console.log(`Criando movimento de saída para produto ${product?.name} na posição ${item.warehouse_floor}-${item.warehouse_position}`);
-        
-        return {
-          product_id: item.productId,
-          type: 'output',
-          quantity: -Math.abs(item.quantity), // Garantir que a quantidade seja negativa para saídas
-          created_by: profile.user.id,
-          floor: item.warehouse_floor,
-          position_number: item.warehouse_position,
-          notes: `Reserva para romaneio #${manifest.number}`
-        };
-      });
-
-      // Inserir todos os movimentos de estoque
-      const { error: movementError } = await supabase
-        .from('product_movements')
-        .insert(stockMovements);
-
-      if (movementError) {
-        console.error("Error creating stock movements:", movementError);
-        throw movementError;
-      }
-
-      // Atualizar explicitamente as posições do warehouse_occupation_report
-      for (const item of items) {
-        const product = products?.find(p => p.id === item.productId);
-        
-        // Chama a função RPC para atualizar a quantidade na posição específica
-        const { error: updateError } = await supabase
-          .rpc('update_warehouse_position_quantity', {
-            p_product_id: item.productId,
-            p_floor: item.warehouse_floor,
-            p_position: item.warehouse_position,
-            p_quantity: -Math.abs(item.quantity) // Garantir que a quantidade seja negativa para saídas
-          });
-        
-        if (updateError) {
-          console.error(`Error updating warehouse position for product ${item.productId}:`, updateError);
-          throw updateError;
-        }
-        
-        console.log(`Posição do armazém atualizada: produto ${product?.name}, posição ${item.warehouse_floor}-${item.warehouse_position}, quantidade -${item.quantity}`);
-      }
-
       // Invalidar a query para atualizar a lista
       queryClient.invalidateQueries({ queryKey: ["manifests"] });
-      queryClient.invalidateQueries({ queryKey: ["stock-levels"] }); 
-      queryClient.invalidateQueries({ queryKey: ["products-with-stock"] });
-      queryClient.invalidateQueries({ queryKey: ["warehouse-occupation-report"] });
 
       toast({
         title: "Romaneio criado com sucesso!",
-        description: "Os produtos foram reservados no estoque."
       });
       
       // Limpar o formulário usando a referência
@@ -194,6 +223,14 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
       
     } catch (error: any) {
       console.error("Erro ao criar romaneio:", error);
+      
+      // Se houver erro, liberar todas as reservas de estoque
+      for (const item of items) {
+        if (item.warehouse_floor && item.warehouse_position) {
+          await releaseStock(item.productId, item.warehouse_floor, item.warehouse_position, item.quantity);
+        }
+      }
+      
       toast({
         title: "Erro ao criar romaneio",
         description: error.message,
@@ -208,13 +245,49 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
     setItems([...items, { productId: "", quantity: 0 }]);
   };
 
-  const removeItem = (index: number) => {
+  const removeItem = async (index: number) => {
+    const itemToRemove = items[index];
+    
+    // Se o item já tinha estoque reservado, liberar o estoque
+    if (itemToRemove.productId && itemToRemove.quantity > 0 && 
+        itemToRemove.warehouse_floor && itemToRemove.warehouse_position) {
+      const success = await releaseStock(
+        itemToRemove.productId, 
+        itemToRemove.warehouse_floor, 
+        itemToRemove.warehouse_position, 
+        itemToRemove.quantity
+      );
+      
+      if (!success) {
+        toast({
+          title: "Erro ao liberar estoque",
+          description: "Não foi possível liberar o estoque reservado para este item.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
     setItems(items.filter((_, i) => i !== index));
+    
+    // Atualizar a lista de produtos disponíveis
+    refetchProducts();
   };
 
-  const updateItem = (index: number, field: keyof ManifestItem, value: string | number) => {
+  const updateItem = async (index: number, field: keyof ManifestItem, value: string | number) => {
     const newItems = [...items];
     const item = newItems[index];
+    
+    // Se estamos mudando o produto e já tínhamos um produto com quantidade, liberar o estoque anterior
+    if (field === "productId" && item.productId && item.quantity > 0 && 
+        item.warehouse_floor && item.warehouse_position) {
+      await releaseStock(
+        item.productId, 
+        item.warehouse_floor, 
+        item.warehouse_position, 
+        item.quantity
+      );
+    }
     
     if (field === "productId") {
       const product = products?.find(p => p.id === value);
@@ -242,13 +315,50 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
     } else if (field === "quantity") {
       const product = products?.find(p => p.id === item.productId);
       
-      if (product && Number(value) > (product.available_quantity || 0)) {
-        toast({
-          title: "Quantidade indisponível",
-          description: `O produto ${product.name} possui apenas ${product.available_quantity} unidades em estoque na posição ${product.warehouse_floor}-${product.warehouse_position}.`,
-          variant: "destructive",
-        });
-        return;
+      if (!product) return;
+      
+      // Se estamos diminuindo a quantidade, liberar a diferença
+      if (item.quantity > Number(value) && item.warehouse_floor && item.warehouse_position) {
+        const quantityDiff = item.quantity - Number(value);
+        await releaseStock(
+          item.productId, 
+          item.warehouse_floor, 
+          item.warehouse_position, 
+          quantityDiff
+        );
+      }
+      
+      // Se estamos aumentando a quantidade, verificar disponibilidade e reservar a diferença
+      if (item.quantity < Number(value)) {
+        const quantityDiff = Number(value) - item.quantity;
+        
+        if (product.available_quantity && quantityDiff > product.available_quantity) {
+          toast({
+            title: "Quantidade indisponível",
+            description: `O produto ${product.name} possui apenas ${product.available_quantity} unidades em estoque na posição ${product.warehouse_floor}-${product.warehouse_position}.`,
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // Reservar a diferença de estoque
+        if (product.warehouse_floor && product.warehouse_position) {
+          const success = await reserveStock(
+            item.productId,
+            product.warehouse_floor,
+            product.warehouse_position,
+            quantityDiff
+          );
+          
+          if (!success) {
+            toast({
+              title: "Erro ao reservar estoque",
+              description: "Não foi possível reservar o estoque para este item.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
       }
 
       newItems[index] = {
@@ -258,6 +368,9 @@ export default function ManifestForm({ manifestId }: ManifestFormProps) {
     }
 
     setItems(newItems);
+    
+    // Atualizar a lista de produtos disponíveis
+    refetchProducts();
   };
 
   return (

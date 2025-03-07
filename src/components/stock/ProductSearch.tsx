@@ -19,6 +19,8 @@ export function ProductSearch() {
   const { data: products, isLoading } = useQuery<WarehouseOccupation[]>({
     queryKey: ["warehouse-occupation-report", search],
     queryFn: async () => {
+      console.log("Fetching warehouse occupation data with search:", search);
+      
       const query = supabase
         .from("warehouse_occupation_report")
         .select()
@@ -29,13 +31,20 @@ export function ProductSearch() {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching warehouse occupation data:", error);
+        throw error;
+      }
 
+      console.log("Warehouse occupation data received:", data);
       return data.map(item => ({
         ...item,
         floor: item.floor || "N/A",
       }));
     },
+    // Diminuir o tempo de stale para forçar atualizações mais frequentes
+    staleTime: 1000 * 60, // 1 minuto
+    refetchOnWindowFocus: true,
   });
 
   return (
