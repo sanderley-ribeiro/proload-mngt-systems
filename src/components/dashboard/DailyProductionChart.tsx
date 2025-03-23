@@ -1,7 +1,9 @@
-
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from "recharts";
+import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface DadosProducao {
   data: string;
@@ -9,28 +11,42 @@ interface DadosProducao {
   total: number;
 }
 
-// Dados fictícios para o gráfico
-const mockDadosProducao: DadosProducao[] = [
-  { data: "01/03", produto: "Produto A", total: 120 },
-  { data: "02/03", produto: "Produto B", total: 85 },
-  { data: "03/03", produto: "Produto C", total: 200 },
-  { data: "04/03", produto: "Produto D", total: 45 },
-  { data: "05/03", produto: "Produto E", total: 150 },
-];
-
 export const DailyProductionChart = () => {
-  const [dadosProducao, setDadosProducao] = useState<DadosProducao[]>([]);
-  const [carregandoDados, setCarregandoDados] = useState(true);
+  const { data: dadosProducao, isLoading: carregandoDados } = useQuery({
+    queryKey: ["daily-production"],
+    queryFn: async () => {
+      console.log("Using movements data for production chart...");
+      
+      const { data, error } = await supabase
+        .from("all_stock_movements_view")
+        .select("*")
+        .eq('movement_type', 'input')
+        .order('movement_date', { ascending: true });
 
-  useEffect(() => {
-    // Simular carregamento de dados
-    const timer = setTimeout(() => {
-      setDadosProducao(mockDadosProducao);
-      setCarregandoDados(false);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, []);
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        return [];
+      }
+
+      const producaoDiaria = data.reduce((acc: Record<string, any>, atual) => {
+        const dataFormatada = format(new Date(atual.movement_date), 'dd/MM', { locale: ptBR });
+        
+        if (!acc[dataFormatada]) {
+          acc[dataFormatada] = {
+            data: dataFormatada,
+            produto: atual.product_name,
+            total: Number(atual.quantity)
+          };
+        } else {
+          acc[dataFormatada].total += Number(atual.quantity);
+        }
+        return acc;
+      }, {});
+
+      return Object.values(producaoDiaria);
+    }
+  });
 
   return (
     <Card>
