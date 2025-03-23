@@ -11,23 +11,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { WarehouseOccupation } from "@/types/warehouse";
+import { debounce } from 'lodash';
 
 export function ProductSearch() {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Use o hook useRef para criar uma função debounce que não muda entre os renders
+  const handleSearchChange = debounce((value: string) => {
+    setDebouncedSearch(value);
+  }, 300);
 
   const { data: products, isLoading } = useQuery<WarehouseOccupation[]>({
-    queryKey: ["warehouse-occupation-report", search],
+    queryKey: ["warehouse-occupation-report", debouncedSearch],
     queryFn: async () => {
-      console.log("Fetching warehouse occupation data with search:", search);
+      console.log("Fetching warehouse occupation data with search:", debouncedSearch);
       
       const query = supabase
         .from("warehouse_occupation_report")
-        .select()
+        .select("id, product_id, product_name, quantity, floor, position_number, entry_date")
         .order("product_name");
 
-      if (search) {
-        query.ilike("product_name", `%${search}%`);
+      if (debouncedSearch) {
+        query.ilike("product_name", `%${debouncedSearch}%`);
       }
 
       const { data, error } = await query;
@@ -42,8 +50,8 @@ export function ProductSearch() {
         floor: item.floor || "N/A",
       }));
     },
-    staleTime: 1000 * 60, // 1 minute
-    refetchOnWindowFocus: true,
+    staleTime: 30000, // 30 segundos
+    gcTime: 60000, // 1 minuto (substitui cacheTime que está obsoleto)
   });
 
   return (
@@ -51,10 +59,14 @@ export function ProductSearch() {
       <Input
         placeholder="Buscar produto..."
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          handleSearchChange(e.target.value);
+        }}
+        className="max-w-md"
       />
 
-      <div className="border rounded-lg">
+      <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -67,14 +79,19 @@ export function ProductSearch() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center">
-                  Carregando...
-                </TableCell>
-              </TableRow>
+              // Esqueletos para exibir durante o carregamento
+              Array.from({ length: 5 }).map((_, index) => (
+                <TableRow key={`loading-${index}`}>
+                  <TableCell><Skeleton className="h-6 w-full" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-12" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-12" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                </TableRow>
+              ))
             ) : products?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center">
+                <TableCell colSpan={5} className="text-center py-6">
                   Nenhum produto encontrado
                 </TableCell>
               </TableRow>
