@@ -34,7 +34,7 @@ export function ProductSearch() {
       try {
         const query = supabase
           .from("warehouse_occupation_report")
-          .select("id, product_id, product_name, quantity, floor, position_number, entry_date")
+          .select("id, product_id, product_name, quantity, floor, position_number, entry_date, stored_by")
           .order("product_name");
 
         if (debouncedSearch) {
@@ -53,10 +53,17 @@ export function ProductSearch() {
         console.log("Warehouse occupation data received:", data);
         setError(null);
         
-        return data?.map(item => ({
-          ...item,
+        // Ensure all required properties exist in the returned data
+        return (data || []).map(item => ({
+          id: item.id || "",
+          product_id: item.product_id || "",
+          product_name: item.product_name || "",
+          quantity: item.quantity || 0,
           floor: item.floor || "N/A",
-        })) || [];
+          position_number: item.position_number || 0,
+          entry_date: item.entry_date || new Date().toISOString(),
+          stored_by: item.stored_by || null,
+        }));
       } catch (err: any) {
         console.error("Exception fetching warehouse data:", err);
         setError(err.message);
