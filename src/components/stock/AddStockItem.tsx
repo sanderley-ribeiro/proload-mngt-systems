@@ -69,7 +69,7 @@ export function AddStockItem() {
       console.log("Posição selecionada:", position);
       console.log("Usuário atual:", user.id);
       
-      // Inserir o movimento
+      // Inserir o movimento sem tentar acessar a tabela profiles
       const { data, error: movementError } = await supabase
         .from("product_movements")
         .insert({

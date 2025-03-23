@@ -42,8 +42,7 @@ export function ProductSearch() {
         floor: item.floor || "N/A",
       }));
     },
-    // Diminuir o tempo de stale para forçar atualizações mais frequentes
-    staleTime: 1000 * 60, // 1 minuto
+    staleTime: 1000 * 60, // 1 minute
     refetchOnWindowFocus: true,
   });
 

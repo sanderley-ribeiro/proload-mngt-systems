@@ -33,7 +33,7 @@ export function WarehouseMap() {
     },
     // Configurações para garantir que os dados sejam atualizados frequentemente
     staleTime: 0, // Dados são sempre considerados obsoletos
-    cacheTime: 0, // Não manter em cache 
+    gcTime: 0, // Não manter em cache (replaced cacheTime which is deprecated)
     refetchOnMount: true, // Refazer a consulta quando o componente for montado
     refetchOnWindowFocus: true, // Refazer a consulta quando a janela obtiver foco
     refetchInterval: 5000, // Refazer a consulta a cada 5 segundos
@@ -54,9 +54,9 @@ export function WarehouseMap() {
           <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
             {Array.from({ length: positionsPerFloor }, (_, i) => {
               const position = i + 1;
-              const occupation = occupations?.find(
+              const occupation = occupations ? occupations.find(
                 (o) => o.floor === floor && o.position_number === position
-              );
+              ) : undefined;
 
               return (
                 <TooltipProvider key={`${floor}-${position}`}>
