@@ -14,12 +14,14 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import type { WarehouseOccupation } from "@/types/warehouse";
 import { debounce } from 'lodash';
+import { toast } from "sonner";
 
 export function ProductSearch() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  // Use o hook useRef para criar uma função debounce que não muda entre os renders
+  // Use debounce to prevent too many requests
   const handleSearchChange = debounce((value: string) => {
     setDebouncedSearch(value);
   }, 300);
@@ -29,26 +31,38 @@ export function ProductSearch() {
     queryFn: async () => {
       console.log("Fetching warehouse occupation data with search:", debouncedSearch);
       
-      const query = supabase
-        .from("warehouse_occupation_report")
-        .select("id, product_id, product_name, quantity, floor, position_number, entry_date")
-        .order("product_name");
+      try {
+        const query = supabase
+          .from("warehouse_occupation_report")
+          .select("id, product_id, product_name, quantity, floor, position_number, entry_date")
+          .order("product_name");
 
-      if (debouncedSearch) {
-        query.ilike("product_name", `%${debouncedSearch}%`);
+        if (debouncedSearch) {
+          query.ilike("product_name", `%${debouncedSearch}%`);
+        }
+
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error("Error fetching warehouse occupation data:", error);
+          setError(error.message);
+          toast.error("Erro ao buscar produtos: " + error.message);
+          return [];
+        }
+
+        console.log("Warehouse occupation data received:", data);
+        setError(null);
+        
+        return data?.map(item => ({
+          ...item,
+          floor: item.floor || "N/A",
+        })) || [];
+      } catch (err: any) {
+        console.error("Exception fetching warehouse data:", err);
+        setError(err.message);
+        toast.error("Erro inesperado ao buscar produtos");
+        return [];
       }
-
-      const { data, error } = await query;
-      if (error) {
-        console.error("Error fetching warehouse occupation data:", error);
-        throw error;
-      }
-
-      console.log("Warehouse occupation data received:", data);
-      return data.map(item => ({
-        ...item,
-        floor: item.floor || "N/A",
-      }));
     },
     staleTime: 30000, // 30 segundos
     gcTime: 60000, // 1 minuto (substitui cacheTime que está obsoleto)
@@ -65,6 +79,13 @@ export function ProductSearch() {
         }}
         className="max-w-md"
       />
+
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <p>Erro ao carregar dados: {error}</p>
+          <p className="text-sm">Por favor, tente novamente mais tarde ou contacte o suporte.</p>
+        </div>
+      )}
 
       <div className="border rounded-lg overflow-hidden">
         <Table>

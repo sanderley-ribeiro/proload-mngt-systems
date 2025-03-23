@@ -297,6 +297,22 @@ export type Database = {
           available_quantity: number
         }[]
       }
+      get_user_profile: {
+        Args: {
+          user_id: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          is_admin: boolean | null
+          name: string | null
+          updated_at: string
+        }[]
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       update_warehouse_position_quantity: {
         Args: {
           p_product_id: string
