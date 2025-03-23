@@ -1,7 +1,5 @@
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -16,64 +14,93 @@ import type { WarehouseOccupation } from "@/types/warehouse";
 import { debounce } from 'lodash';
 import { toast } from "sonner";
 
+// Mock data para exibir na interface sem backend
+const mockProducts: WarehouseOccupation[] = [
+  {
+    id: "1",
+    product_id: "p1",
+    product_name: "Produto A",
+    quantity: 120,
+    floor: "A",
+    position_number: 5,
+    entry_date: new Date().toISOString(),
+    stored_by: "Usuário 1"
+  },
+  {
+    id: "2",
+    product_id: "p2",
+    product_name: "Produto B",
+    quantity: 85,
+    floor: "B",
+    position_number: 12,
+    entry_date: new Date().toISOString(),
+    stored_by: "Usuário 2"
+  },
+  {
+    id: "3",
+    product_id: "p3",
+    product_name: "Produto C",
+    quantity: 200,
+    floor: "A",
+    position_number: 8,
+    entry_date: new Date().toISOString(),
+    stored_by: "Usuário 1"
+  },
+  {
+    id: "4",
+    product_id: "p4",
+    product_name: "Produto D",
+    quantity: 45,
+    floor: "C",
+    position_number: 3,
+    entry_date: new Date().toISOString(),
+    stored_by: "Usuário 3"
+  },
+  {
+    id: "5",
+    product_id: "p5",
+    product_name: "Produto E",
+    quantity: 150,
+    floor: "B",
+    position_number: 9,
+    entry_date: new Date().toISOString(),
+    stored_by: "Usuário 2"
+  }
+];
+
 export function ProductSearch() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [products, setProducts] = useState<WarehouseOccupation[]>(mockProducts);
 
-  // Use debounce to prevent too many requests
+  // Use debounce para evitar muitas buscas
   const handleSearchChange = debounce((value: string) => {
     setDebouncedSearch(value);
-  }, 300);
-
-  const { data: products, isLoading } = useQuery<WarehouseOccupation[]>({
-    queryKey: ["warehouse-occupation-report", debouncedSearch],
-    queryFn: async () => {
-      console.log("Fetching warehouse occupation data with search:", debouncedSearch);
-      
+    
+    // Simulando uma busca com delay para parecer real
+    setIsLoading(true);
+    setTimeout(() => {
       try {
-        const query = supabase
-          .from("warehouse_occupation_report")
-          .select("id, product_id, product_name, quantity, floor, position_number, entry_date, stored_by")
-          .order("product_name");
-
-        if (debouncedSearch) {
-          query.ilike("product_name", `%${debouncedSearch}%`);
+        if (!value) {
+          setProducts(mockProducts);
+        } else {
+          const filteredProducts = mockProducts.filter(product => 
+            product.product_name.toLowerCase().includes(value.toLowerCase())
+          );
+          setProducts(filteredProducts);
         }
-
-        const { data, error } = await query;
-        
-        if (error) {
-          console.error("Error fetching warehouse occupation data:", error);
-          setError(error.message);
-          toast.error("Erro ao buscar produtos: " + error.message);
-          return [];
-        }
-
-        console.log("Warehouse occupation data received:", data);
         setError(null);
-        
-        // Ensure all required properties exist in the returned data
-        return (data || []).map(item => ({
-          id: item.id || "",
-          product_id: item.product_id || "",
-          product_name: item.product_name || "",
-          quantity: item.quantity || 0,
-          floor: item.floor || "N/A",
-          position_number: item.position_number || 0,
-          entry_date: item.entry_date || new Date().toISOString(),
-          stored_by: item.stored_by || null,
-        }));
       } catch (err: any) {
-        console.error("Exception fetching warehouse data:", err);
-        setError(err.message);
-        toast.error("Erro inesperado ao buscar produtos");
-        return [];
+        console.error("Erro ao buscar produtos:", err);
+        setError("Erro ao buscar produtos");
+        toast.error("Erro ao buscar produtos");
+      } finally {
+        setIsLoading(false);
       }
-    },
-    staleTime: 30000, // 30 segundos
-    gcTime: 60000, // 1 minuto (substitui cacheTime que está obsoleto)
-  });
+    }, 300);
+  }, 300);
 
   return (
     <div className="space-y-4">
@@ -117,14 +144,14 @@ export function ProductSearch() {
                   <TableCell><Skeleton className="h-6 w-24" /></TableCell>
                 </TableRow>
               ))
-            ) : products?.length === 0 ? (
+            ) : products.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-6">
                   Nenhum produto encontrado
                 </TableCell>
               </TableRow>
             ) : (
-              products?.map((item) => (
+              products.map((item) => (
                 <TableRow key={`${item.product_id}-${item.position_number}`}>
                   <TableCell>{item.product_name}</TableCell>
                   <TableCell>{item.floor}</TableCell>
